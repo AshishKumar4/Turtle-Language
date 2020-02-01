@@ -9,44 +9,17 @@
 #include <map>
 #include <list>
 
-#include "parser/literal.hpp"
-#include "parser/operator.hpp"
-#include "parser/bracket.hpp"
-#include "parser/quotestr.hpp"
+#include "tokenTree/tokenTree.hpp"
+// #include "tokenTree/operator.hpp"
+// #include "parser/bracket.hpp"
+// #include "parser/quotestr.hpp"
 
 #include "ast/ast.hpp"
 
+#include "grabs.hpp"
+
 namespace turtle
 {
-
-// TrieNode<MemoryWrapper> GLOBAL_VARIABLE_TABLE;
-TupleTreeNode::TupleTreeNode(std::vector<TokenTree *> nodes, bool sanitize) : TreeTuple<TokenTree>(nodes, TokenTreeUseType::DYNAMIC), is_dynamic(true)
-{
-    // We should sanitize the tuple i.e, convert all internal expressions into solved TokenTreeTypes* if they are mere Arithmatic expressions
-    if (sanitize)
-    {
-        this->elements = sanitizeSequences(this->elements, GLOBAL_CONTEXT);
-    }
-
-    for (auto i : this->elements)
-    {
-        if (i->getUseType() == TokenTreeUseType::STATIC)
-        {
-            is_dynamic = false;
-            break;
-        }
-    }
-}
-
-TokenTree *solveVariablePlaceHolder(TokenTree *node)
-{
-    if (node->getType() == TokenTreeType::VARIABLE)
-    {
-        // If its a defined placeholder (a variable), solve it and return its contents
-        return ((VariableTreeNode *)node)->getValue();
-    }
-    return node;
-}
 
 std::map<TokenType, std::function<Token *(char *, int)>> TOKEN_CREATOR_TABLE;
 
@@ -165,69 +138,6 @@ std::vector<Token *> genTokenList(std::string str)
     return toks;
 }
 
-std::map<TokenType, tokenDigester_t> TOKEN_DIGESTERS;
-
-TokenDigesterReturn_t tokenDigester_unknown(Token **list, int index, int size, variableContext_t &context)
-{
-    errorHandler("Recieved unknown token " + list[index]->data);
-    return TokenDigesterReturn_t((TokenTree *)NULL, 1);
-}
-
-extern TokenDigesterReturn_t tokenTreeDigester_functional(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenTreeDigester_conditional(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenTreeDigester_loop(Token **list, int index, int size, variableContext_t &context);
-
-extern TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size, variableContext_t &context);
-
-void init_tokenDigesters()
-{
-    TOKEN_DIGESTERS[TokenType::NUMBER] = tokenDigester_number;
-    TOKEN_DIGESTERS[TokenType::UNKNOWN] = tokenDigester_unknown;
-    TOKEN_DIGESTERS[TokenType::LITERAL] = tokenDigester_literal;
-    TOKEN_DIGESTERS[TokenType::BRACKET] = tokenDigester_bracket;
-    TOKEN_DIGESTERS[TokenType::OPERATOR] = tokenDigester_operator;
-    TOKEN_DIGESTERS[TokenType::SINGLE_QUOTES] = tokenDigester_quotes;
-    TOKEN_DIGESTERS[TokenType::DOUBLE_QUOTES] = tokenDigester_quotes;
-
-    init_operatorTypeTable();
-}
-
-std::vector<TokenTree *> genTreeNodeList(std::vector<Token *> list, variableContext_t &context)
-{
-    // std::list<Token* > toklist(list.begin(), list. end());
-    Token **tlist = &list[0];
-    std::vector<TokenTree *> treelist;
-    for (int i = 0; i < list.size();)
-    {
-        // std::cout<< "<" << tlist[i]->data << "," <<i<<">";
-        fflush(stdout);
-        auto [elem, poped] = TOKEN_DIGESTERS[tlist[i]->type](tlist, i, list.size(), context);
-        i += poped;
-        treelist.push_back(elem);
-    }
-
-    return treelist;
-}
-
-std::vector<TokenTree *> genTokenStack(std::string str)
-{
-    try
-    {
-        std::vector<Token *> list = genTokenList(str);
-        auto treelist = genTreeNodeList(list, GLOBAL_CONTEXT);
-        return treelist;
-    }
-    catch (std::exception &e)
-    {
-        errorHandler(ParserError("Grammer Error!, " + std::string(e.what())));
-        exit(0);
-    }
-    return std::vector<TokenTree *>();
-}
 
 Context_t GLOBAL_VARIABLE_TABLE;
 variableContext_t GLOBAL_CONTEXT({&GLOBAL_VARIABLE_TABLE});
@@ -237,10 +147,7 @@ void init_parser()
     printf("\nInitializing Parser...\n");
     init_derivRules();
     init_tokenCreatorTable();
-    init_tokenDigesters();
-
-    init_bracketTypeTable();
-    init_globalLiteralTable();
+    init_tokenTrees();
 }
 
 } // namespace turtle

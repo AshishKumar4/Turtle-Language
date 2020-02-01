@@ -1,5 +1,6 @@
 #include "operatorHandlers.hpp"
-#include "parser/operator.hpp"
+#include "tokenTree/operator.hpp"
+#include "tokenTree/tokenTree.hpp"
 #include "tokens.hpp"
 #include "DataTypes.hpp"
 
@@ -56,13 +57,17 @@ TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
         case TokenTreeType::VARIABLE:
             std::cout << "We are here!";
             return nullptr;
+        case TokenTreeType::OPERATOR:
+            return nullptr;
+        case TokenTreeType::FUTURE_LITERAL:
+            return nullptr;
         default:
             errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
         }
     }
     else
     {
-        errorHandler(SyntacticError("Operator Type Incompatibility!"));
+        // errorHandler(SyntacticError("Operator Type Incompatibility!"));
         return nullptr;
     }
     return nullptr;
@@ -85,6 +90,10 @@ TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
+            return nullptr;
+        case TokenTreeType::OPERATOR:
+            return nullptr;
+        case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
             errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
@@ -114,6 +123,11 @@ TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
+            // errorHandler
+            return nullptr;
+        case TokenTreeType::OPERATOR:
+            return nullptr;
+        case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
             errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
@@ -144,6 +158,10 @@ TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
         }
         case TokenTreeType::VARIABLE:
             return nullptr;
+        case TokenTreeType::OPERATOR:
+            return nullptr;
+        case TokenTreeType::FUTURE_LITERAL:
+            return nullptr;
         default:
             errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
         }
@@ -157,21 +175,49 @@ TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
 
 TokenTree *operator_binaryEqual(TokenTree *left, TokenTree *right)
 {
-    if (left->getType() == TokenTreeType::VARIABLE)
+    switch (left->getType())
     {
-        if (right->getType() == TokenTreeType::VARIABLE)
+    case TokenTreeType::VARIABLE:
+    {
+        right = solveVariablePlaceHolder(right);
+        // if (right->getType() == TokenTreeType::VARIABLE)
+        // {
+        //     if (((VariableTreeNode *)right)->getStoreType() == TokenTreeType::UNKNOWN)
+        //         right = nullptr;
+        //     else
+        //         right = ((VariableTreeNode *)right)->getValue();
+        // }
+        if(right == nullptr)
         {
-            if (((VariableTreeNode *)right)->getStoreType() == TokenTreeType::UNKNOWN)
-                right = nullptr;
-            else
-                right = ((VariableTreeNode *)right)->getValue();
+            // std::cout << "RIGHT_IS_NULL";
+            return nullptr;
         }
-        ((VariableTreeNode *)left)->setValue(right);
+        *((VariableTreeNode *)left) = right;//->setValue(right);
+        // std::cout<< " EQUAL_ASSIGNMENT!";
         return left;
     }
-    else
+    case TokenTreeType::TUPLE:
+    {
+        right = solveVariablePlaceHolder(right);
+        if(right == nullptr)
+        {
+            return nullptr;
+        }
+        if(right->getType() == TokenTreeType::TUPLE)
+        {
+            auto tup = (TupleTreeNode*)left;
+            *tup = (TupleTreeNode*)right;
+        }
+        else
+        {
+            errorHandler(SyntacticError("Tuple equated to Non tuple obj"));
+        }
+        return left;
+    }
+    default:
     {
         errorHandler(NotImplementedError("Equivalence for non variable types"));
+    }
     }
     return nullptr;
 }

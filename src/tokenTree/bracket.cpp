@@ -8,7 +8,8 @@
 #include <exception>
 #include <map>
 
-#include "parser/bracket.hpp"
+#include "tokenTree/bracket.hpp"
+#include "tokenTree/tokenTree.hpp"
 
 namespace turtle
 {
@@ -47,7 +48,7 @@ void init_bracketTypeTable()
     }
 }
 
-TokenTree *packageBracketNodes(std::vector<TokenTree *> treelist, BracketInfo btype, variableContext_t &context)
+TokenTree *packageBracketNodes(std::vector<TokenTree *> treelist, BracketInfo btype)//, variableContext_t &context)
 {
     switch (btype & BRACKET_INFO_FUNCTIONTYPE)
     {
@@ -62,7 +63,7 @@ TokenTree *packageBracketNodes(std::vector<TokenTree *> treelist, BracketInfo bt
         // These can EITHER be DICTs or CODEBLOCKS, thus 
         // We should just wrap these into a temporary 
         // holder and pass on for further stages to determine its type.
-        return new CodeBlock(treelist, context);//CurlyBracketTreeNode(treelist);
+        return new CodeBlock(treelist);//CurlyBracketTreeNode(treelist);
         break;
     case BRACKET_SQUARE:
         // Only for lists!
@@ -83,7 +84,7 @@ inline bool validateBracketEquality(BracketInfo btype, BracketInfo origType)
     return false;
 }
 
-TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketInfo origBtype, variableContext_t &context, std::function<TokenTree*(std::vector<TokenTree*>, BracketInfo, variableContext_t&)> packager=packageBracketNodes)
+TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketInfo origBtype, std::function<TokenTree*(std::vector<TokenTree*>, BracketInfo)> packager=packageBracketNodes)
 {
     // Recursive Solve, just find out its bracket
     // Find out the closing bracket for this bracket
@@ -113,15 +114,15 @@ TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketIn
             // We would catch the error somewhere down the road for sure!
             std::vector<Token *> newlist(&list[index+1], &list[i]);
 
-            auto newContext = new Context_t();
-            variableContext_t ncontext(context);
-            ncontext.push_back(newContext);
+            // auto newContext = new Context_t();
+            // variableContext_t ncontext(context);
+            // ncontext.push_back(newContext);
             // context.push_back(newContext); // Add a new local context
             // Recursion of the system...
-            std::vector<TokenTree *> treelist = genTreeNodeList(newlist, ncontext);
+            std::vector<TokenTree *> treelist = genTreeNodeList(newlist);//, ncontext);
             // Now according to the type of bracket, Package the
             // Treelist into a single tree node
-            return TokenDigesterReturn_t(packager(treelist, origBtype, context), newlist.size()+2);
+            return TokenDigesterReturn_t(packager(treelist, origBtype), newlist.size()+2);
         }
     }
 
@@ -129,7 +130,7 @@ TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketIn
     return TokenDigesterReturn_t(nullptr, 1);
 }
 
-TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size)//, variableContext_t &context)
 {
     // When we Encounter any bracket type, We recursively
     // solve for internal tokens to generate pseudo-complete
@@ -143,7 +144,7 @@ TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size, v
         errorHandler("Got Closing bracket when opening expected!");
     }
 
-    auto [node, popped] = bracketSolver(list, index, size, btype, context);
+    auto [node, popped] = bracketSolver(list, index, size, btype);
     return TokenDigesterReturn_t(node, popped);
 }
 

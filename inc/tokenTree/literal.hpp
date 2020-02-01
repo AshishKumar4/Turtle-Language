@@ -3,53 +3,11 @@
 #include "tokens.hpp"
 #include "tokenRules.hpp"
 
+#include "tokenTree/tokenTree.hpp"
+#include "tokens.hpp"
+
 namespace turtle
 {
-
-class FunctionTreeNode : public TokenTree
-{
-    // A Function is a collection of several TokenTrees
-protected:
-    TupleTreeNode params;
-    TupleTreeNode* results; // Is set by returning statements present in the codeblock!
-    CodeBlock block;
-
-public:
-    FunctionTreeNode(std::string name, TupleTreeNode &params, CodeBlock &block) : 
-    TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(params)
-    {
-        std::cout<<"<func "<<name<<" "<<params.getSize()<<"> ";
-    }
-
-    void setParams(TupleTreeNode* paramVals)
-    {
-        errorHandler(NotImplementedError("Function setParam()"));
-    }
-
-    virtual std::string stringRepresentation()
-    {
-        return " " + name + "_" + params.stringRepresentation() + "_" + block.stringRepresentation();
-    }
-};
-
-class ConditionalTreeNode : public TokenTree
-{
-    // Can be used as If/Else as well as Switch()
-protected:
-    TupleTreeNode params;
-    TreeTuple<CodeBlock> blocks;
-
-public:
-    ConditionalTreeNode(TupleTreeNode params, TreeTuple<CodeBlock> blocks) : 
-    TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
-    {
-    }
-
-    // virtual std::string stringRepresentation()
-    // {
-    //     return 
-    // }
-};
 
 /*
     * <Placeholders> *
@@ -161,11 +119,12 @@ public:
 
     TokenTreeType getType() {return type;}
 
-    TokenDigesterReturn_t tokenTreeBuilder(TokenTree** list, int index, int size, variableContext_t &context);
+    TokenDigesterReturn_t tokenTreeBuilder(TokenTree** list, int index, int size, variableContext_t &context, bool tree_expantion=true);
 };
 
 class TempLiteralTreeNode : public TokenTree 
 {
+    static Grabs<TempLiteralTreeNode> grabsToken;
 protected:
     LiteralRulesConstruct*   rule;
 public:
@@ -174,23 +133,55 @@ public:
     {
         // std::cout<<"keyword["<<name<<"]";
     }
+
+    void* operator new(std::size_t size)
+    {
+        TempLiteralTreeNode* tok = grabsToken.grab();
+        return tok;
+    }
+
+    void operator delete(void* ptr)
+    {
+        std::cout<<"Custom delete!";
+        grabsToken.giveBack((TempLiteralTreeNode*)ptr);
+    }
     
     auto getRule()
     {
         return rule;
     }
+
+    virtual TokenTree *execute()
+    {
+        // Execution logic
+        return this;
+    }
+
 };
 
 class TempLiteralWrapperNode : public TokenTree 
 {
+    static Grabs<TempLiteralWrapperNode> grabsToken;
 protected:
     LiteralRulesConstruct*   rule;
-    TokenTree*  orig;
+    VariableTreeNode*  orig;
 public:
-    TempLiteralWrapperNode(TokenTree* orig, LiteralRulesConstruct* rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL_WRAPPER) : 
+    TempLiteralWrapperNode(VariableTreeNode* orig, LiteralRulesConstruct* rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL_WRAPPER) : 
     TokenTree(type, TokenTreeUseType::DYNAMIC, "tmp_"+orig->getName()), rule(rule), orig(orig)
     {
         // std::cout<<"keyword["<<name<<"]";
+    }
+
+    void* operator new(std::size_t size)
+    {
+        TempLiteralWrapperNode* tok = grabsToken.grab();
+        return tok;
+    }
+
+    void operator delete(void* ptr)
+    {
+        std::cout<<"Custom delete!";
+        grabsToken.giveBack((TempLiteralWrapperNode*)ptr);
     }
     
     auto getRule()
@@ -201,6 +192,39 @@ public:
     auto getOriginal()
     {
         return orig;
+    }
+
+    virtual TokenTree *execute()
+    {
+        // Execution logic
+        return this;
+    }
+
+};
+
+typedef std::tuple<TokenTreeType, std::vector<TokenTree *>, std::vector<LiteralRule>, variableContext_t> futureData_t;
+
+TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context);
+
+class FutureSolutionTreeNode : public TokenTree
+{
+    futureData_t data;
+public:
+    FutureSolutionTreeNode(TokenTreeType type, std::vector<TokenTree *> list, std::vector<LiteralRule> rules, variableContext_t context) : 
+    TokenTree(TokenTreeType::FUTURE_LITERAL, TokenTreeUseType::DYNAMIC, "tmp")
+    {
+        data = futureData_t(type, list, rules, context);
+    }
+
+    futureData_t getData()
+    {
+        return data;
+    }
+
+    TokenTree* execute()
+    {
+        auto [type, list, rules, context] = data;
+        return genTokenTreeNodeFromList(type, list, rules, context);
     }
 };
 

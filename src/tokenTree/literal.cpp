@@ -5,69 +5,78 @@
 #include "library/trie.hpp"
 #include "library/common.hpp"
 
-#include "parser/literal.hpp"
-#include "parser/bracket.hpp"
-#include "parser/quotestr.hpp"
+#include "tokenTree/tokenTree.hpp"
+#include "tokenTree/bracket.hpp"
+#include "tokenTree/literal.hpp"
+
+#include "ast/ast.hpp"
 
 #include <exception>
 #include <map>
 
-#include "parser/literal.hpp"
-
 namespace turtle
 {
 
-FunctionTreeNode *genNewFunction(std::string name, TupleTreeNode *params, CodeBlock *block)
+FunctionTreeNode *genNewFunction(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t &context)
 {
     // Verify that the TupleTreeNode dosen't contain any constants!
-    if (!params->isDynamic())
-    {
-        errorHandler(SyntacticError("You cannot provide static values in initialization parameters of functions"));
-        return nullptr;
-    }
-    FunctionTreeNode *func = new FunctionTreeNode(name, *params, *block);
+    // if (!params->isDynamic())
+    // {
+    //     errorHandler(SyntacticError("You cannot provide static values in initialization parameters of functions"));
+    //     return nullptr;
+    // }
+
+    FunctionTreeNode *func = new FunctionTreeNode(name, params, block, context);
     return func;
 }
 
-TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context)
+TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context) //, bool symbolic)
 {
     TokenTree *node = nullptr;
     switch (type)
     {
     case TokenTreeType::DEFINE:
+    {
         std::cout << "\nDEFINE:";
         // We construct a new function!
-
-        node = genNewFunction(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3])); // Name, param, codeblock
+        node = genNewFunction(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context); // Name, param, codeblock
         // Wrap our new node into a PlaceHolder Variable and put it into the context
         (*context.back())[list[1]->getName()] = new VariableTreeNode(node, list[1]->getName());
         break;
+    }
     case TokenTreeType::FUNCTIONAL:
+    {
         std::cout << "FUNCTIONAL:";
         node = list[0];
+        std::cout << node->getName();
         switch (node->getType())
         {
         case TokenTreeType::VARIABLE:
         {
             // Generally Functions are put in variables
-            if (((VariableTreeNode *)node)->getStoreType() == TokenTreeType::UNKNOWN)
-            {
-                errorHandler(NotImplementedError("Future Calling"));
-                break;
-            }
             node = solveVariablePlaceHolder(node);
-            if (node == nullptr)
+            if (node->getType() != TokenTreeType::FUNCTIONAL)
             {
-                errorHandler(SyntacticError("Variable has NULL value"));
-                break;
+                errorHandler(SyntacticError(node->getName() + " is not a function!"));
             }
         }
         case TokenTreeType::FUNCTIONAL:
-        case TokenTreeType::INBUILT_FUNCTION:
-        {
-            ((FunctionTreeNode *)node)->setParams((TupleTreeNode *)list[1]);
-            break;
-        }
+            // case TokenTreeType::INBUILT_FUNCTION:
+            {
+
+                // If its a symbolic call, Just wrap it into a functional obj and pass on!
+                // if (!symbolic)
+                {
+                    auto func = ((FunctionTreeNode *)node);
+                    func->setParams((TupleTreeNode *)list[1], context);
+                    node = func->execute();
+                }
+                // else
+                // {
+
+                // }
+                break;
+            }
         case TokenTreeType::CONSTANT:
         {
             errorHandler(NotImplementedError("Constant Function calling"));
@@ -83,6 +92,22 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
             errorHandler(NotImplementedError("Non-Function type to Function conversion"));
         }
         break;
+    }
+    case TokenTreeType::RETURN:
+    {
+        std::cout << "RETURN ";
+        // set a value in the current context
+        // Solve it just in case
+        auto tok = simpleASTmaker(std::vector<TokenTree *>(list.begin() + 1, list.end()), context);
+
+        // if (tok->getType() == TokenTreeType::VARIABLE)
+        //     tok = ((VariableTreeNode *)tok)->getValue();
+
+        auto arg = new ReturnTreeNode(tok);
+        // std::cout << tok->stringRepresentation();
+        // fflush(stdout);
+        node = arg;
+    }
     case TokenTreeType::INBUILT_FUNCTION:
         std::cout << "INBUILD_FUNCTION:";
         break;
@@ -112,7 +137,8 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     if (node != nullptr)
         return node;
     errorHandler(SyntacticError("Could not process the token " + list[0]->getName()));
-    return new TokenTree(TokenTreeType::UNKNOWN, "__unknown__");
+    // return new TokenTree(TokenTreeType::UNKNOWN, "__unknown__");
+    return nullptr;
 }
 
 int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constraints, int finger, int size)
@@ -214,7 +240,7 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
     return 0;
 }
 
-TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t &context)
+TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t &context, bool tree_expantion)
 {
     int finger = index;
     // TokenTree*     root = genTokenTreeNodeFromType(this->getType());
@@ -282,7 +308,16 @@ TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, 
         errorHandler(SyntacticError("You cannot use " + list[index]->getName() + " like this!"));
         return TokenDigesterReturn_t(list[0], 1);
     }
-    return TokenDigesterReturn_t(genTokenTreeNodeFromList(this->getType(), tmpList, satisfiedRules, context), finger - index);
+    TokenTree *node;
+    if (!tree_expantion)
+    {
+        // To be executed later
+        // Wrap in future object
+        node = new FutureSolutionTreeNode(this->getType(), tmpList, satisfiedRules, context);
+    }
+    else
+        node = genTokenTreeNodeFromList(this->getType(), tmpList, satisfiedRules, context);
+    return TokenDigesterReturn_t(node, finger - index);
 }
 
 TokenTree *packageDict(std::vector<TokenTree *> list, BracketInfo btype, variableContext_t &context)
@@ -295,39 +330,7 @@ TokenTree *packageSet(std::vector<TokenTree *> list, BracketInfo btype, variable
     return nullptr;
 }
 
-auto genUnknownVariable(std::string name, variableContext_t &context)
-{
-    auto newVar = new VariableTreeNode(nullptr, name);
-    // Put this into the last context!
-    (*(context.back()))[name] = newVar;
-    std::cout << "Context size: "<< context.size() <<name;
-    return newVar;
-}
-
-VariableTreeNode *contextSolver(Token *tok, variableContext_t &context)
-{
-    // Starting from the end, search for context to the begining
-    for (int i = context.size() - 1; i >= 0; i--)
-    {
-        try
-        {
-            auto currContext = (*context[i]);
-
-            auto var = currContext[tok->data];
-            if (var != nullptr)
-            {
-                return var;
-            }
-        }
-        catch (...)
-        {
-            ;
-        }
-    }
-    return genUnknownVariable(tok->data, context);
-}
-
-TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size) //, variableContext_t &context)
 {
     // Find out the type of literal
     auto tok = list[index];
@@ -337,13 +340,8 @@ TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size, v
         auto obj = GLOBAL_LITERAL_TABLE[tok->data];
         if (obj == nullptr)
         {
-            TokenTree *newTok = contextSolver(tok, context);
-
-            // if (((PlaceHolderTreeNode *)newTok)->getStoreType() != TokenTreeType::UNKNOWN)
-            // {
-            //     // If its a defined placeholder (a variable), solve it and return its contents
-            //     newTok = ((VariableTreeNode *)newTok)->getValue();
-            // }
+            // Lets not solve variables over here!
+            VariableTreeNode *newTok = new VariableTreeNode(nullptr, tok->data); //contextSolver(tok, context);
 
             // If a literal is followed by a bracket, it means something!
             if (index + 1 < size && list[index + 1]->type == TokenType::BRACKET)
@@ -359,21 +357,21 @@ TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size, v
                     // Its Array Indexing
                     return TokenDigesterReturn_t(new TempLiteralWrapperNode(newTok, GLOBAL_LITERAL_TABLE["__array__"], TokenTreeType::TEMP_LITERAL_WRAPPER), 1);
                 }
-                else if (brack == "{")
-                {
-                    if (tok->data == "dict" || tok->data == "d")
-                    {
-                        auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageDict);
-                        return TokenDigesterReturn_t(node, popped + 1);
-                    }
-                    else if (tok->data == "set" || tok->data == "s")
-                    {
-                        auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageSet);
-                        return TokenDigesterReturn_t(node, popped + 1);
-                    }
-                    else
-                        errorHandler(ParserError("A Literal cannot be followed by Curly Braces!"));
-                }
+                // else if (brack == "{")
+                // {
+                //     if (tok->data == "dict" || tok->data == "d")
+                //     {
+                //         auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageDict);
+                //         return TokenDigesterReturn_t(node, popped + 1);
+                //     }
+                //     else if (tok->data == "set" || tok->data == "s")
+                //     {
+                //         auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageSet);
+                //         return TokenDigesterReturn_t(node, popped + 1);
+                //     }
+                //     else
+                //         errorHandler(ParserError("A Literal cannot be followed by Curly Braces!"));
+                // }
             }
             return TokenDigesterReturn_t(newTok, 1);
         }
@@ -382,11 +380,11 @@ TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size, v
     }
     catch (...)
     {
-        return TokenDigesterReturn_t(genUnknownVariable(tok->data, context), 1);
+        return TokenDigesterReturn_t(new VariableTreeNode(nullptr, tok->data), 1);
     }
 }
 
-TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size) //, variableContext_t &context)
 {
     auto tok = list[index];
     // Find out the type of number
@@ -447,6 +445,10 @@ void init_globalLiteralTable()
                                                                {
                                                                    LiteralRule({new NameLiteralConstraint("key_define"), new LiteralConstraint(TokenTreeType::DUMMY), new TupleLiteralConstraint(REPEAT_ZERO_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
                                                                });
+
+    GLOBAL_LITERAL_TABLE["return"] = new LiteralRulesConstruct("return", TokenTreeType::RETURN,
+                                                               {LiteralRule({new NameLiteralConstraint("key_return")}, 1),
+                                                                LiteralRule({new LiteralConstraint(TokenTreeType::DUMMY)}, REPEAT_ONE_OR_MANY)});
 
     GLOBAL_LITERAL_TABLE["while"] = new LiteralRulesConstruct("while", TokenTreeType::LOOP,
                                                               {

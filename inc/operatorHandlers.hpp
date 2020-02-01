@@ -1,10 +1,11 @@
 #pragma once
 #include "operatorHandlers.hpp"
-#include "parser/operator.hpp"
 #include "tokens.hpp"
 #include "DataTypes.hpp"
 
 #include "library/common.hpp"
+#include "tokenTree/tokenTree.hpp"
+#include "tokenTree/operator.hpp"
 
 namespace turtle
 {

@@ -3,7 +3,8 @@
 #include "tokenRules.hpp"
 // #include "library/trie.hpp"
 #include "library/common.hpp"
-#include "parser/operator.hpp"
+#include "tokenTree/tokenTree.hpp"
+#include "tokenTree/operator.hpp"
 
 #include "operatorHandlers.hpp"
 
@@ -70,7 +71,7 @@ void init_operatorTypeTable()
     TOKEN_OPERATOR_BINARY_TYPE_TABLE["&&"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 14);
     TOKEN_OPERATOR_BINARY_TYPE_TABLE["||"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 15);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["="] = OperatorBinaryProfile(operator_binaryEqual, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
+    TOKEN_OPERATOR_BINARY_TYPE_TABLE["="] = OperatorBinaryProfile(operator_binaryEqual, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC | (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE), OperatorAssociativity::RIGHT, 16);
     TOKEN_OPERATOR_BINARY_TYPE_TABLE["+="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
     TOKEN_OPERATOR_BINARY_TYPE_TABLE["-="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
     TOKEN_OPERATOR_BINARY_TYPE_TABLE["*="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
@@ -83,15 +84,7 @@ void init_operatorTypeTable()
     TOKEN_OPERATOR_BINARY_TYPE_TABLE[";"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
 }
 
-OperatorTreeNode *genOperatorTreeNode(OperatorInfo optype, std::string symbol)
-{
-    // We can't determine right now if a symbol is UNARY/BINARY or TERNARY,
-    // So lets just make a simple Token
-    OperatorTreeNode *res = new OperatorTreeNode(optype, symbol);
-    return res;
-}
-
-TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)//, variableContext_t &context)
 {
     // Operators can be of many type too
     auto tok = list[index];
@@ -115,8 +108,8 @@ TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size, 
     }
     else 
     {
-        // We assumes its a Unary Operator!
-        // Its a Unary Operator!
+        // We assumes its a Binary Operator!
+        // Its a Binary Operator!
         if(TOKEN_OPERATOR_BINARY_TYPE_TABLE.find(tok->data) == TOKEN_OPERATOR_BINARY_TYPE_TABLE.end())
         {
             errorHandler(ParserError("No such operator found!"));

@@ -21,7 +21,7 @@ inline void displayPrompt()
     setColor(WHITE);
 }
 
-int interpreter(std::string input)
+std::string interpreter(std::string input)
 {
     auto toks = turtle::genTokenStack(input);
     // std::cout << std::endl;
@@ -32,8 +32,8 @@ int interpreter(std::string input)
     // }
 
     auto ast = turtle::simpleASTmaker(toks, turtle::GLOBAL_CONTEXT);//turtle::genAST(toks, turtle::GLOBAL_CONTEXT);
-    std::cout << std::endl << ast->stringRepresentation();
-    return 0;
+    // std::cout << std::endl << ast->stringRepresentation();
+    return ast->stringRepresentation();
 }
 
 std::vector<std::string> SHELL_HISTORY;
@@ -48,18 +48,18 @@ void shellLoop()
         std::getline(std::cin, userInput);
 
         setColor(YELLOW);
-        int val;
+        std::string val;
         try
         {
             SHELL_HISTORY.push_back(userInput);
-            interpreter(userInput);
+            val = interpreter(userInput);
         }
         catch (...)
         {
             std::cout << "Error Occured!"; //<< e.what();
         }
-        setColor(MAGENTA);
-        std ::cout << std::endl;
+        setColor(BRIGHT_GREEN);
+        std ::cout << std::endl << val <<std::endl;
     }
 }
 

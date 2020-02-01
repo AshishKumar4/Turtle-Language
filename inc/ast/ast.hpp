@@ -2,11 +2,10 @@
 #include "library/common.hpp"
 #include "tokens.hpp"
 
-#include "parser/parser.hpp"
-#include "parser/literal.hpp"
-#include "parser/bracket.hpp"
-#include "parser/operator.hpp"
-#include "parser/quotestr.hpp"
+#include "tokenTree/literal.hpp"
+#include "tokenTree/operator.hpp"
+#include "tokenTree/bracket.hpp"
+#include "tokenTree/tokenTree.hpp"
 
 #include <map>
 #include <iostream>
@@ -16,7 +15,8 @@
 
 namespace turtle 
 {
-std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context);
+std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context, std::string seperator=",", bool symbolic_execution = false, bool tree_expantion=true);
 TokenTree* genAST(std::vector<TokenTree*> nodes, variableContext_t &context);
-TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &context);
+TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &context, bool tree_expantion = true);
+TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t &context);
 }

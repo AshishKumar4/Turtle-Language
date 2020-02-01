@@ -2,9 +2,11 @@
 
 #include "tokens.hpp"
 #include "tokenRules.hpp"
+#include "tokenTree/tokenTree.hpp"
 
 namespace turtle
 {
+    
 enum class BracketType
 {
     OPENING = 1<<1,
@@ -26,17 +28,17 @@ enum class BracketType
 
 typedef uint32_t BracketInfo;
 
-class CurlyBracketTreeNode : public TokenTree 
-{
-public:
-    std::vector<TokenTree* > treelist;
-    CurlyBracketTreeNode(std::vector<TokenTree* > treelist) : TokenTree(TokenTreeType::CURLY_BRACKET_BLOCK, TokenTreeUseType::DYNAMIC, "curlyblock"), treelist(treelist)
-    {
-        // std::cout<<"(curly "<<treelist.size()<<")";
-    }
-};
+// class CurlyBracketTreeNode : public TokenTree 
+// {
+// public:
+//     std::vector<TokenTree* > treelist;
+//     CurlyBracketTreeNode(std::vector<TokenTree* > treelist) : TokenTree(TokenTreeType::CURLY_BRACKET_BLOCK, TokenTreeUseType::DYNAMIC, "curlyblock"), treelist(treelist)
+//     {
+//         // std::cout<<"(curly "<<treelist.size()<<")";
+//     }
+// };
 
 extern std::map<std::string, BracketInfo> TOKEN_BRACKET_TYPE_TABLE;
-TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketInfo origBtype, variableContext_t &context, std::function<TokenTree*(std::vector<TokenTree*>, BracketInfo, variableContext_t&)> packager);
+TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketInfo origBtype, std::function<TokenTree*(std::vector<TokenTree*>, BracketInfo)> packager);
 void init_bracketTypeTable();
 }

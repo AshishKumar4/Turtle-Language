@@ -2,11 +2,10 @@
 #include "library/common.hpp"
 #include "tokens.hpp"
 
-#include "parser/parser.hpp"
-#include "parser/literal.hpp"
-#include "parser/bracket.hpp"
-#include "parser/operator.hpp"
-#include "parser/quotestr.hpp"
+#include "tokenTree/literal.hpp"
+#include "tokenTree/bracket.hpp"
+#include "tokenTree/operator.hpp"
+#include "tokenTree/tokenTree.hpp"
 
 #include <map>
 #include <iostream>
@@ -27,7 +26,41 @@ void init_tokenTreeDigester()
     // TOKENTREE_DIGESTERS[TokenTreeType::DEFINE] =
 }
 
-auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t &context)
+auto genUnknownVariable(std::string name, variableContext_t &context)
+{
+    auto newVar = new VariableTreeNode(nullptr, name);
+    // Put this into the last context!
+    (*(context.back()))[name] = newVar;
+    std::cout << "Context size: " << context.size() << name;
+    return newVar;
+}
+
+VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t &context)
+{
+    // Starting from the end, search for context to the begining
+    for (int i = context.size() - 1; i >= 0; i--)
+    {
+        try
+        {
+            auto currContext = (*context[i]);
+
+            auto var = currContext[tok->getName()];
+            if (var != nullptr)
+            {
+                return var;
+            }
+        }
+        catch (...)
+        {
+            ;
+        }
+    }
+    std::cout << "making in context: " << tok->getName();
+    (*(context.back()))[tok->getName()] = tok;
+    return tok;
+}
+
+auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t &context, bool tree_expantion = true)
 {
     std::vector<TokenTree *> treelist;
     TokenTree **tlist = &nodes[0];
@@ -35,13 +68,41 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t &context)
     // std::list<TokenTree*> nodesList(nodes.begin(), nodes.end());
     for (int i = 0; i < nodes.size();)
     {
+        std::cout << tlist[i]->stringRepresentation() << " <=> ";
         switch (tlist[i]->getType())
         {
+        case TokenTreeType::VARIABLE:
+        {
+            auto tmp = (VariableTreeNode *)tlist[i];
+            if (tmp->getStoreType() == TokenTreeType::UNKNOWN)
+            {
+                tmp = contextSolver(tmp, context);
+            }
+            else
+            {
+                errorHandler(SyntacticError("Expected an undefined Variable"));
+            }
+            treelist.push_back(tmp);
+            ++i;
+            break;
+        }
+        case TokenTreeType::TUPLE:
+        {
+            // A lone tuple, Solve it!
+            auto tmp = (TupleTreeNode *)tlist[i];
+            tmp->solve(context);
+            treelist.push_back(tmp);
+            ++i;
+            break;
+        }
         case TokenTreeType::TEMP_LITERAL_WRAPPER:
         {
             auto tmp = (TempLiteralWrapperNode *)tlist[i];
             tlist[i] = tmp->getOriginal();
-            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context);
+            // If its a temp_literal_wrapper, most probably it would hold only
+            // Unknown variables. But still, lets just confirm!
+            tlist[i] = contextSolver((VariableTreeNode *)tlist[i], context);
+            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
             i += poped;
             treelist.push_back(elem);
             break;
@@ -49,9 +110,16 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t &context)
         case TokenTreeType::TEMP_LITERAL:
         {
             auto tmp = (TempLiteralTreeNode *)tlist[i];
-            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context);
+            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
             i += poped;
             treelist.push_back(elem);
+            break;
+        }
+        case TokenTreeType::FUTURE_LITERAL:
+        {
+            treelist.push_back(tlist[i]->execute());
+            ++i;
+            // errorHandler(NotImplementedError("Just testing"));
             break;
         }
         default:
@@ -62,28 +130,6 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t &context)
 
     return treelist;
 }
-
-// auto genAST_stage2(std::vector<TokenTree *> nodes, variableContext_t &context)
-// {
-//     std::vector<TokenTree *> treelist;
-//     TokenTree **tlist = &nodes[0];
-//     for (int i = 0; i < nodes.size();)
-//     {
-//         switch (tlist[i]->getType())
-//         {
-//         case TokenTreeType::FUNCTIONAL:
-//         case TokenTreeType::INBUILT_FUNCTION:
-//         {
-//             // If there is a tuple next to it,
-//         }
-//         default:
-//             treelist.push_back(tlist[i]);
-//             ++i;
-//         }
-//     }
-
-//     return treelist;
-// }
 
 TokenTree *genAST(std::vector<TokenTree *> nodes, variableContext_t &context)
 {
@@ -100,29 +146,109 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
 {
     // Pop elements while There are elements of higher precedence in the stack
     // or equal precedence but the operator is left associative
-    auto op = (BinaryOperatorTreeNode *)opstack.back();
-    opstack.pop_back();
+    TokenTree* val;
+    if (opstack.back()->getOptype() & (uint)OperatorType::BINARY)
+    {
+        auto op = (BinaryOperatorTreeNode *)opstack.back();
+        opstack.pop_back();
 
-    // generate Tree out of these operators
-    // Pop two elements out of outQueue
-    auto elm1 = outQueue.back();
-    outQueue.pop_back();
-    auto elm2 = outQueue.back();
-    outQueue.pop_back();
+        // generate Tree out of these operators
+        // Pop two elements out of outQueue
+        if(outQueue.size() < 2) 
+        {
+            outQueue.push_back(op);
+            return;
+        }
+        auto elm1 = outQueue.back();
+        outQueue.pop_back();
+        auto elm2 = outQueue.back();
+        outQueue.pop_back();
 
-    // Make them as the two nodes of the Operator
-    op->setRight(elm1);
-    op->setLeft(elm2);
+        // Make them as the two nodes of the Operator
+        op->setRight(elm1);
+        op->setLeft(elm2);
 
-    auto val = op->execute();
-
+        val = op->execute();
+    }
+    else 
+    {
+        errorHandler(NotImplementedError("Unary Operators"));
+    }
     // Now push this back to the outQueue
     outQueue.push_back(val);
 }
 
-TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &context)
+TokenTree *solveOperators(OperatorTreeNode *op)
+{
+    auto tok = op->execute();
+    if (tok != op && tok->getType() == TokenTreeType::OPERATOR)
+    {
+        return solveOperators((OperatorTreeNode *)tok);
+    }
+    return tok;
+}
+
+TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t &context)
+{
+    // In Symbolic Execution, Basically, all nodes are Tree Roots
+    // We solve the tree Depth First from right side
+    TokenTree *result, *temp;
+    std::cout << "Symbolic Execution! " << nodes.size() << "\n";
+
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        auto tok = nodes[i];
+        // tok = solveVariablePlaceHolder(tok);
+        while (tok != nullptr)
+        {
+            // std::cout << (int)tok->getType() << "=> " << tok->stringRepresentation() << ":";
+
+            switch (tok->getType())
+            {
+            case TokenTreeType::OPERATOR:
+            {
+                //Solve the operator's nodes
+                temp = ((OperatorTreeNode *)tok)->executeRecursive();
+                // std::cout << "HERE";
+                break;
+            }
+            default:
+                temp = tok->execute();
+                break;
+            }
+
+            if (temp == tok)
+                break;
+            tok = temp;
+        }
+        // std::cout << "\n";
+        if (tok == nullptr)
+        {
+            errorHandler(SyntacticError("Nullptr returned!"));
+            break;
+        }
+        result = tok;
+        if (result->getType() == TokenTreeType::RETURN)
+        {
+            // (*context.back())["$return"] = new VariableTreeNode(((ReturnTreeNode *)result)->getValue());
+            result = ((ReturnTreeNode *)result)->getValue(); //result->getValue();
+            break;
+        }
+    }
+    // errorHandler(NotImplementedError("Symbolic Execution"));
+    std::cout << "Symbolic Execution complete!\n";
+    if (result == nullptr)
+    {
+        errorHandler(SyntacticError("Nullptr returned!"));
+    }
+    // std::cout<<result->stringRepresentation();
+    return result;
+}
+
+TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &context, bool tree_expantion)
 {
     printf("[In SimpleAstMaker]");
+    fflush(stdout);
     // Its job is to solve for simple expressions
     // And if its purely arithmatic on constants, Even solve it completely
     // and return a single node at the end, Maybe a constant, maybe a root to an
@@ -133,18 +259,8 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
         return nullptr;
     }
 
-    auto stage1Nodes = genAST_Stage1(nodes, context); // For Only Functions and Lists
-    // std::cout<<stage1Nodes.size();
-    // fflush(stdout);
-    // for (auto i : stage1Nodes)
-    // {
-    //     std::cout << "_" ;
-    //     fflush(stdout);
-    //     std::cout<< i->getName();
-    //     fflush(stdout);
-    // }
-    // std::cout<<std::endl;
-    // fflush(stdout);
+    auto stage1Nodes = genAST_Stage1(nodes, context, tree_expantion); // For Only Functions and Lists
+
     TokenTree *rootNode = stage1Nodes[0];
     TokenTree *currNode = rootNode;
 
@@ -155,7 +271,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
     {
         for (auto i : stage1Nodes)
         {
-            std::cout << "\t" << i->getName();
+            std::cout << " >> " << i->getName();
             fflush(stdout);
             switch (i->getType())
             {
@@ -168,6 +284,8 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
                            (opstack.back()->getPrecedence() < node->getPrecedence() or
                             (opstack.back()->getPrecedence() == node->getPrecedence() and node->getAssociativity() == OperatorAssociativity::LEFT)))
                     {
+                        // std::cout << "We are here!";
+                        // fflush(stdout);
                         transferOpToOutQueue(opstack, outQueue);
                     }
                     opstack.push_back(node);
@@ -195,7 +313,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
             //     auto node = solveVariablePlaceHolder(i);
             //     if(node != nullptr)
             //         outQueue.push_back(node);
-            //     else 
+            //     else
             //         outQueue.push_back(i);
             //     break;
             // }
@@ -204,6 +322,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
             case TokenTreeType::FUNCTIONAL:
             case TokenTreeType::LIST:
             case TokenTreeType::DICT:
+            case TokenTreeType::FUTURE_LITERAL:
             {
                 outQueue.push_back(i);
                 break;
@@ -218,7 +337,12 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
         // If there are still operators on the operator stack, pop them all
         while (opstack.size())
         {
+            // std::cout << "We are here!";
+            // fflush(stdout);
+            std::cout<<" -->> " << outQueue.size();
             transferOpToOutQueue(opstack, outQueue);
+            // outQueue.push_back(opstack.back());
+            // opstack.pop_back();
         }
     }
     catch (...)
@@ -226,46 +350,44 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
         errorHandler(SyntacticError("Wrong Grammer followed!"));
     }
 
-    // fflush(stdout);
-    // std::cout<<"\n\nhere-->";
-    // for (auto i : outQueue)
-    // {
-    //     std::cout << "_";
-    //     fflush(stdout);
-    //     std::cout << i->getName();
-    //     fflush(stdout);
-    // }
-    // std::cout << std::endl;
-    // // fflush(stdout);
-    if(outQueue.size() != 1)
+    if (outQueue.size() != 1)
     {
         errorHandler(SyntacticError("Could not solve the statement for 1 result!"));
     }
     return outQueue[0];
 }
 
-std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context)
+std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context, std::string seperator, bool symbolic_execution, bool tree_expantion)
 {
     std::vector<TokenTree *> solvedNodes;
     int tmpIndex = 0;
     int i = 0;
 
-    while (tmpIndex < nodes.size())
+    if (symbolic_execution)
     {
-        if (i >= nodes.size() || (nodes[i]->getType() == TokenTreeType::OPERATOR && nodes[i]->getName() == ","))
-        {
-            if (i - tmpIndex == 1)
-            {
-                solvedNodes.push_back(nodes[tmpIndex]);
-            }
-            else
-            {
-                solvedNodes.push_back(simpleASTmaker(std::vector<TokenTree *>(&nodes[tmpIndex], &nodes[i]), context));
-            }
-            tmpIndex = i + 1;
-        }
-        ++i;
+        solvedNodes.push_back(symbolicASTexecutor(nodes, context));
     }
+    else
+    {
+        while (tmpIndex < nodes.size())
+        {
+            if (i >= nodes.size() || (nodes[i]->getType() == TokenTreeType::OPERATOR && nodes[i]->getName() == seperator))
+            {
+                // if (i - tmpIndex == 1)
+                // {
+                //     solvedNodes.push_back(nodes[tmpIndex]);
+                // }
+                // else
+                // if(!symbolic_execution)
+                {
+                    solvedNodes.push_back(simpleASTmaker(std::vector<TokenTree *>(&nodes[tmpIndex], &nodes[i]), context, tree_expantion));
+                }
+                tmpIndex = i + 1;
+            }
+            ++i;
+        }
+    }
+
     for (auto i : solvedNodes)
     {
         std::cout << "_" << i->getName();

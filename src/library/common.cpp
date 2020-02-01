@@ -5,6 +5,7 @@
 
 #include "library/common.hpp"
 #include "tokens.hpp"
+#include "tokenTree/tokenTree.hpp"
 
 void errorHandler(std::string errorMsg)
 {
@@ -32,12 +33,21 @@ namespace turtle
 {
 bool checkIfUnknown(TokenTree* tok)
 {
-    // if((tok->getType() == TokenTreeType::PLACEHOLDER and 
-    //     ((PlaceHolderTreeNode*)tok)->getStoreType() == TokenTreeType::UNKNOWN) or
-    if(  tok->getType() == TokenTreeType::UNKNOWN)
+    // if((tok->getType() == TokenTreeType::VARIABLE and 
+    //     ((VariableTreeNode*)tok)->getStoreType() == TokenTreeType::UNKNOWN) or
+    if(tok->getType() == TokenTreeType::UNKNOWN)
     {
         return true;
     }
     return false;
 }   
+
+bool checkIfUnknownVar(TokenTree* tok)
+{
+    if(tok->getType() == TokenTreeType::VARIABLE and ((VariableTreeNode*)tok)->getStoreType() == TokenTreeType::UNKNOWN)
+    {
+        return true;
+    }
+    return false;
+}
 }
