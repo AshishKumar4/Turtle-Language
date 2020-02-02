@@ -48,7 +48,7 @@ void init_bracketTypeTable()
     }
 }
 
-TokenTree *packageBracketNodes(std::vector<TokenTree *> treelist, BracketInfo btype)//, variableContext_t &context)
+TokenTree *packageBracketNodes(std::vector<TokenTree *> treelist, BracketInfo btype)//, variableContext_t context)
 {
     switch (btype & BRACKET_INFO_FUNCTIONTYPE)
     {
@@ -130,7 +130,7 @@ TokenDigesterReturn_t bracketSolver(Token **list, int index, int size, BracketIn
     return TokenDigesterReturn_t(nullptr, 1);
 }
 
-TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size)//, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size)//, variableContext_t context)
 {
     // When we Encounter any bracket type, We recursively
     // solve for internal tokens to generate pseudo-complete

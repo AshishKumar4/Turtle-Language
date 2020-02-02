@@ -62,6 +62,15 @@ enum class TokenTreeUseType
     DYNAMIC // For CodeBlocks and stuffs which can be used again and again
 };
 
+class VariableTreeNode;
+
+typedef std::map<std::string, VariableTreeNode *> Context_t;
+typedef std::vector<Context_t *> variableContext_t;
+extern Context_t GLOBAL_VARIABLE_TABLE;
+extern variableContext_t GLOBAL_CONTEXT;
+
+VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t context, bool strict);
+
 // Our Abstract Syntax Tree
 class TokenTree
 {
@@ -107,7 +116,7 @@ public:
     //     grabsToken.giveBack((TokenTree*)ptr);
     // }
 
-    virtual TokenTree *execute() = 0;
+    virtual TokenTree *execute(variableContext_t context) = 0;
 
     virtual std::string stringRepresentation()
     {
@@ -130,7 +139,7 @@ public:
     }
 };
 
-TokenTree *solveVariablePlaceHolder(TokenTree *node);
+// TokenTree *solveVariablePlaceHolder(TokenTree *node);
 
 class VariableTreeNode : public TokenTree
 {
@@ -139,6 +148,9 @@ class VariableTreeNode : public TokenTree
     static Grabs<VariableTreeNode> grabsToken;
 
 public:
+    VariableTreeNode() : TokenTree(TokenTreeType::VARIABLE, TokenTreeUseType::DYNAMIC, "tmpvar")
+    {
+    }
     // These hold data of other nodes
     VariableTreeNode(TokenTree *value, std::string name) : TokenTree(TokenTreeType::VARIABLE, TokenTreeUseType::DYNAMIC, name), holder(value)
     {
@@ -160,14 +172,14 @@ public:
         grabsToken.giveBack((VariableTreeNode *)ptr);
     }
 
-    TokenTree *getValue()
-    {
-        if (holder == nullptr)
-        {
-            return this;
-        }
-        return holder->execute();
-    }
+    // TokenTree *getValue()
+    // {
+    //     if (holder == nullptr)
+    //     {
+    //         return this;
+    //     }
+    //     return holder->execute();
+    // }
 
     auto getStoreType()
     {
@@ -188,18 +200,31 @@ public:
         std::string container;
         if (holder == nullptr)
             container = "undefined";
-        else 
+        else
             container = holder->stringRepresentation();
         return this->getName() + " = " + container;
     }
 
-    virtual TokenTree *execute()
+    TokenTree *execute(variableContext_t context)
     {
+        std::cout << "I CAME HERE";
+        fflush(stdout);
         // Execution logic
-        return this->getValue();
+
+        if (holder == nullptr)
+        {
+            // auto var = contextSolver(this, context, true);
+            // if (var == this)
+            // {
+            //     return this;
+            // }
+            // holder = var->holder;
+            return this;
+        }
+        return holder->execute(context);
     }
 
-    VariableTreeNode* operator =(TokenTree *obj)
+    VariableTreeNode *operator=(TokenTree *obj)
     {
         this->setValue(obj);
         return this;
@@ -240,7 +265,7 @@ public:
         {
             return this;
         }
-        return holder->execute();
+        return holder;
     }
 
     auto getStoreType()
@@ -262,22 +287,17 @@ public:
         std::string container;
         if (holder == nullptr)
             container = "undefined";
-        else 
+        else
             container = holder->stringRepresentation();
         return this->getName() + " = " + container;
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
     }
 };
-
-typedef std::map<std::string, VariableTreeNode *> Context_t;
-typedef std::vector<Context_t *> variableContext_t;
-extern Context_t GLOBAL_VARIABLE_TABLE;
-extern variableContext_t GLOBAL_CONTEXT;
 
 template <typename T>
 class TreeTuple : public TokenTree
@@ -321,7 +341,7 @@ public:
         return elements;
     }
 
-    T* get(int index)
+    T *get(int index)
     {
         return elements[index];
     }
@@ -336,7 +356,7 @@ public:
         return val + ")";
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -354,7 +374,7 @@ protected:
     bool is_solved;
     // bool is_deterministic;
 public:
-    // friend std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context, std::string seperator, bool symbolic_execution, bool tree_expantion);
+    // friend std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t context, std::string seperator, bool symbolic_execution, bool tree_expantion);
 
     TupleTreeNode(std::vector<TokenTree *> nodes) : TreeTuple<TokenTree>(nodes, TokenTreeUseType::DYNAMIC), is_dynamic(true), is_solved(false)
     {
@@ -384,22 +404,22 @@ public:
 
     void solve(variableContext_t context);
 
-    TupleTreeNode* operator =(TupleTreeNode* obj)
+    TupleTreeNode *operator=(TupleTreeNode *obj)
     {
-        if(obj->getSize() != this->getSize())
+        if (obj->getSize() != this->getSize())
         {
             errorHandler(SyntacticError("Unequal size tuple equivalance"));
             return this;
         }
-        for(int i=0; i < this->elements.size(); i++)
-        {   
-            if(this->elements[i]->getType() == TokenTreeType::VARIABLE)
+        for (int i = 0; i < this->elements.size(); i++)
+        {
+            if (this->elements[i]->getType() == TokenTreeType::VARIABLE)
             {
                 auto tok = obj->get(i);
                 // if(tok->getType() == TokenTreeType::VARIABLE)
                 //     tok = ((VariableTreeNode*)tok)->getValue();
-                tok = solveVariablePlaceHolder(tok);
-                *((VariableTreeNode*)this->elements[i]) = tok;
+                // tok = solveVariablePlaceHolder(tok);
+                *((VariableTreeNode *)this->elements[i]) = tok;
             }
         }
         return this;
@@ -416,7 +436,7 @@ public:
         errorHandler("Dicts Not Implemented!");
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -433,7 +453,7 @@ public:
         errorHandler("Lists Not Implemented!");
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -477,7 +497,7 @@ public:
         return obj->getResultString();
     }
 
-    virtual TokenTree *execute()
+    TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -489,12 +509,23 @@ class CodeBlock : public TokenTree
 protected:
     std::vector<TokenTree *> statements;
     // variableContext_t context;
-    Context_t* localContext;
+    Context_t *localContext;
 
     bool is_solved;
 
 public:
-    // friend std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context, std::string seperator, bool symbolic_execution, bool tree_expantion);
+    // friend std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t context, std::string seperator, bool symbolic_execution, bool tree_expantion);
+
+    CodeBlock(CodeBlock *block) : TokenTree(TokenTreeType::CODEBLOCK, TokenTreeUseType::DYNAMIC, block->name), statements(block->statements), is_solved(block->is_solved)
+    {
+        // We need to copy the context
+        auto octx = *(block->localContext);
+        localContext = new Context_t;
+        for (auto [i, j] : octx)
+        {
+            (*localContext)[i] = new VariableTreeNode(*j);
+        }
+    }
 
     CodeBlock(std::vector<TokenTree *> &nodelist, TokenTreeUseType useType = TokenTreeUseType::DYNAMIC, std::string name = "_tmp_") : TokenTree(TokenTreeType::CODEBLOCK, TokenTreeUseType::DYNAMIC, "block" + name), statements(nodelist), is_solved(false)
     {
@@ -511,13 +542,9 @@ public:
         return val + "}";
     }
 
-    virtual TokenTree *execute()
-    {
-        // Execution logic
-        return this;
-    }
+    TokenTree *execute(variableContext_t context);
 
-    Context_t* getContext()
+    Context_t *getContext()
     {
         return localContext;
     }
@@ -529,7 +556,7 @@ public:
 
     void solve(variableContext_t context = GLOBAL_CONTEXT);
 
-    TokenTree* execute(variableContext_t context = GLOBAL_CONTEXT);
+    // TokenTree* execute(variableContext_t context = GLOBAL_CONTEXT);
 };
 
 class FunctionTreeNode : public TokenTree
@@ -537,29 +564,35 @@ class FunctionTreeNode : public TokenTree
 protected:
     // A Function is a collection of several TokenTrees
     variableContext_t tmp_context;
-    TupleTreeNode* params;
+    TupleTreeNode params;
     TupleTreeNode *results; // Is set by returning statements present in the codeblock!
-    CodeBlock* block;
+    CodeBlock *block;
     static Grabs<FunctionTreeNode> grabsToken;
 
-    bool    paramsSet;
+    bool paramsSet;
 
 public:
-    FunctionTreeNode(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t &context) : 
-    TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(params), paramsSet(false)
+    FunctionTreeNode(FunctionTreeNode *func) : TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, func->name), params(func->params), paramsSet(false)
+    {
+        // create a new block as well as context!
+        // block = new CodeBlock(func->block);
+        block = func->block;
+    }
+
+    FunctionTreeNode(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t context) : TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(*params), paramsSet(false)
     {
         std::cout << "<func " << name << " " << params->getSize() << "> ";
-        if (this->params->isSolved() == false)
+        if (this->params.isSolved() == false)
         {
             // Now we would make a new context, and solve the tuple using it
             // Solve it in our context
             auto newContext = this->block->getContext();
-            this->params->solve({newContext});
+            this->params.solve({newContext});
             this->block->solve(context);
             // std::cout<<"FUNCTION_MADE!";
             // this->context.push_back(newContext);
         }
-        else 
+        else
         {
             errorHandler(SyntacticError("Function's parameters already solved!"));
         }
@@ -581,40 +614,41 @@ public:
 
     virtual std::string stringRepresentation()
     {
-        return " " + name + "_" + params->stringRepresentation() + "_" + block->stringRepresentation();
+        return " " + name + "_" + params.stringRepresentation() + "_" + block->stringRepresentation();
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // auto blockCopy = new CodeBlock(this->block);
         // this->block->solve(this->context);    // Solve it in the current context
-            // Solve it in the current context
-        if(paramsSet)
+        // Solve it in the current context
+        if (paramsSet)
         {
-            auto tok = this->block->execute(this->tmp_context);
+            CodeBlock block = *(this->block);
+            auto tok = block.execute(context);
             paramsSet = false;
+            std::cout << "[" << tok->stringRepresentation() << "]";
             return tok;
         }
-        else 
+        else
             return this;
         // return this;
     }
 
-    virtual TokenTree* execute(variableContext_t context)
-    {
-        return this->block->execute(context);
-    }
+    // virtual TokenTree* execute(variableContext_t context)
+    // {
+    //     return this->block.execute(context);
+    // }
 };
 
-class LambdaTreeNode : public FunctionTreeNode 
+class LambdaTreeNode : public FunctionTreeNode
 {
 protected:
     static Grabs<LambdaTreeNode> grabsToken;
-public:
-    LambdaTreeNode(TupleTreeNode *params, CodeBlock *block, variableContext_t &context) : 
-    FunctionTreeNode("lambda",params, block, context)
-    {
 
+public:
+    LambdaTreeNode(TupleTreeNode *params, CodeBlock *block, variableContext_t context) : FunctionTreeNode("lambda", params, block, context)
+    {
     }
 
     void *operator new(std::size_t size)
@@ -628,30 +662,47 @@ public:
         std::cout << "Custom delete!";
         grabsToken.giveBack((LambdaTreeNode *)ptr);
     }
-    
-    virtual std::string stringRepresentation()
+
+    // virtual std::string stringRepresentation()
+    // {
+    //     return " " + name + "_" + params->stringRepresentation() + "_" + block->stringRepresentation();
+    // }
+};
+
+typedef std::function<TokenTree *(TupleTreeNode *)> inbuiltFunc_t;
+
+class InbuiltFunctionTreeNode : public TokenTree
+{
+protected:
+    TupleTreeNode *params;
+    inbuiltFunc_t func;
+
+public:
+    InbuiltFunctionTreeNode(inbuiltFunc_t func, TupleTreeNode *params, std::string name) : TokenTree(TokenTreeType::INBUILT_FUNCTION, TokenTreeUseType::STATIC, name), params(params), func(func)
     {
-        return " " + name + "_" + params->stringRepresentation() + "_" + block->stringRepresentation();
     }
 
+    TokenTree *execute(variableContext_t context)
+    {
+        return this;
+    }
 };
 
 class ConditionalTreeNode : public TokenTree
 {
     // Can be used as If/Else as well as Switch()
 protected:
-    std::vector<TupleTreeNode*> params;
-    std::vector<CodeBlock*> blocks;
+    std::vector<TupleTreeNode *> params;
+    std::vector<CodeBlock *> blocks;
 
 public:
-    ConditionalTreeNode(std::vector<TupleTreeNode*> params, std::vector<CodeBlock*> blocks) : 
-    TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
+    ConditionalTreeNode(std::vector<TupleTreeNode *> params, std::vector<CodeBlock *> blocks) : TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
     {
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
-        
+
         return this;
     }
 
@@ -670,7 +721,7 @@ extern std::map<TokenType, tokenDigester_t> TOKEN_DIGESTERS;
 std::vector<TokenTree *> genTreeNodeList(std::vector<Token *> list);
 std::vector<TokenTree *> genTokenStack(std::string str);
 bool checkIfUnknown(TokenTree *tok);
-bool checkIfUnknownVar(TokenTree* tok);
+bool checkIfUnknownVar(TokenTree *tok);
 
 void init_tokenTrees();
 

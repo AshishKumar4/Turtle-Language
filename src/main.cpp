@@ -24,12 +24,12 @@ inline void displayPrompt()
 std::string interpreter(std::string input)
 {
     auto toks = turtle::genTokenStack(input);
-    // std::cout << std::endl;
-    // for (auto i : toks)
-    // {
-    //     std::cout << "\t" << i->getName();
-    //     fflush(stdout);
-    // }
+    std::cout << std::endl;
+    for (auto i : toks)
+    {
+        std::cout << "\t" << i->getName();
+        fflush(stdout);
+    }
 
     auto ast = turtle::simpleASTmaker(toks, turtle::GLOBAL_CONTEXT, true);
     // Solve the ast -->

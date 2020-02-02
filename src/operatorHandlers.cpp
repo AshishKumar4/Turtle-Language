@@ -66,8 +66,8 @@ bool isVariableUnknown(VariableTreeNode *left, VariableTreeNode *right)
 
 TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
 {
-    left = solveVariablePlaceHolder(left);
-    right = solveVariablePlaceHolder(right);
+    // left = solveVariablePlaceHolder(left);
+    // right = solveVariablePlaceHolder(right);
     if (left->getType() == right->getType())
     {
         switch (left->getType())
@@ -101,8 +101,8 @@ TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
 
 TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
 {
-    left = solveVariablePlaceHolder(left);
-    right = solveVariablePlaceHolder(right);
+    // left = solveVariablePlaceHolder(left);
+    // right = solveVariablePlaceHolder(right);
     if (left->getType() == right->getType())
     {
         switch (left->getType())
@@ -132,8 +132,8 @@ TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
 
 TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
 {
-    left = solveVariablePlaceHolder(left);
-    right = solveVariablePlaceHolder(right);
+    // left = solveVariablePlaceHolder(left);
+    // right = solveVariablePlaceHolder(right);
     if (left->getType() == right->getType())
     {
         switch (left->getType())
@@ -163,8 +163,8 @@ TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
 
 TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
 {
-    left = solveVariablePlaceHolder(left);
-    right = solveVariablePlaceHolder(right);
+    // left = solveVariablePlaceHolder(left);
+    // right = solveVariablePlaceHolder(right);
     if (left->getType() == right->getType())
     {
         switch (left->getType())
@@ -198,7 +198,7 @@ TokenTree *operator_binaryEqual(TokenTree *left, TokenTree *right)
     {
     case TokenTreeType::VARIABLE:
     {
-        right = solveVariablePlaceHolder(right);
+        // right = solveVariablePlaceHolder(right);
         if (right == nullptr)
         {
             return nullptr;
@@ -208,7 +208,7 @@ TokenTree *operator_binaryEqual(TokenTree *left, TokenTree *right)
     }
     case TokenTreeType::TUPLE:
     {
-        right = solveVariablePlaceHolder(right);
+        // right = solveVariablePlaceHolder(right);
         if (right == nullptr)
         {
             return nullptr;

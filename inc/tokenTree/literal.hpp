@@ -119,7 +119,7 @@ public:
 
     TokenTreeType getType() {return type;}
 
-    TokenDigesterReturn_t tokenTreeBuilder(TokenTree** list, int index, int size, variableContext_t &context, bool tree_expantion=true);
+    TokenDigesterReturn_t tokenTreeBuilder(TokenTree** list, int index, int size, variableContext_t context, bool tree_expantion=true);
 };
 
 class TempLiteralTreeNode : public TokenTree 
@@ -151,7 +151,7 @@ public:
         return rule;
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -194,7 +194,7 @@ public:
         return orig;
     }
 
-    virtual TokenTree *execute()
+    virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
@@ -202,18 +202,18 @@ public:
 
 };
 
-typedef std::tuple<TokenTreeType, std::vector<TokenTree *>, std::vector<LiteralRule>, variableContext_t> futureData_t;
+typedef std::tuple<TokenTreeType, std::vector<TokenTree *>, std::vector<LiteralRule>> futureData_t;
 
-TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context);
+TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t context);
 
 class FutureSolutionTreeNode : public TokenTree
 {
     futureData_t data;
 public:
-    FutureSolutionTreeNode(TokenTreeType type, std::vector<TokenTree *> list, std::vector<LiteralRule> rules, variableContext_t context) : 
+    FutureSolutionTreeNode(TokenTreeType type, std::vector<TokenTree *> list, std::vector<LiteralRule> rules) : 
     TokenTree(TokenTreeType::FUTURE_LITERAL, TokenTreeUseType::DYNAMIC, "tmp")
     {
-        data = futureData_t(type, list, rules, context);
+        data = futureData_t(type, list, rules);
     }
 
     futureData_t getData()
@@ -221,10 +221,10 @@ public:
         return data;
     }
 
-    TokenTree* execute()
+    TokenTree* execute(variableContext_t context)
     {
-        auto [type, list, rules, context] = data;
-        return genTokenTreeNodeFromList(type, list, rules, context)->execute();
+        auto [type, list, rules] = data;
+        return genTokenTreeNodeFromList(type, list, rules, context)->execute(context);
     }
 };
 

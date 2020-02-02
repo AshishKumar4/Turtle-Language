@@ -122,16 +122,12 @@ public:
         child = child;
     }
 
-    TokenTree *execute()
+    TokenTree *execute(variableContext_t context)
     {
         std::cout << "Trying to execute!";
         return this;
     }
 
-    TokenTree *executeRecursive()
-    {
-        return this;
-    }
 };
 
 class BinaryOperatorTreeNode : public OperatorTreeNode
@@ -187,7 +183,7 @@ public:
     //     return this;
     // }
 
-    TokenTree *execute()
+    TokenTree *execute(variableContext_t context)
     {
         // std::cout << "Trying to execute!";
         // std::cout << "\n->r{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
@@ -201,12 +197,12 @@ public:
             //  && r->getType() != TokenTreeType::OPERATOR
             && !checkIfUnknown(l) && !checkIfUnknownVar(r))
         {
+            r = r->execute(context);
             if (!(this->opType & (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE))
             {
-                l = l->execute();
+                l = l->execute(context);
             }
-            r = r->execute();
-
+            std::cout << "\n---->r[" << l->stringRepresentation() << "_" << this->getName() << "_" << r->stringRepresentation() << "]";
             auto val = logic(l, r);
             if (val != nullptr)
             {

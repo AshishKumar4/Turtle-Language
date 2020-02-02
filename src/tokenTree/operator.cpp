@@ -84,7 +84,7 @@ void init_operatorTypeTable()
     TOKEN_OPERATOR_BINARY_TYPE_TABLE[";"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
 }
 
-TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)//, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)//, variableContext_t context)
 {
     // Operators can be of many type too
     auto tok = list[index];

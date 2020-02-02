@@ -17,17 +17,17 @@
 namespace turtle
 {
 
-TokenTree *packageDict(std::vector<TokenTree *> list, BracketInfo btype, variableContext_t &context)
+TokenTree *packageDict(std::vector<TokenTree *> list, BracketInfo btype, variableContext_t context)
 {
     return new DictTreeNode(list);
 }
 
-TokenTree *packageSet(std::vector<TokenTree *> list, BracketInfo btype, variableContext_t &context)
+TokenTree *packageSet(std::vector<TokenTree *> list, BracketInfo btype, variableContext_t context)
 {
     return nullptr;
 }
 
-TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size) //, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size) //, variableContext_t context)
 {
     // Find out the type of literal
     auto tok = list[index];
@@ -50,7 +50,7 @@ TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size) /
     }
 }
 
-TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size) //, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size) //, variableContext_t context)
 {
     auto tok = list[index];
     // Find out the type of number

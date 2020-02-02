@@ -37,7 +37,7 @@ public:
 
     auto grab()
     {
-        if(heap.size() == 0)
+        if(heap.size() == 1)
         {
             resize(maxSize/2);
         }

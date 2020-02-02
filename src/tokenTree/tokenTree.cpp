@@ -18,15 +18,15 @@ namespace turtle
 {
 std::map<TokenType, tokenDigester_t> TOKEN_DIGESTERS;
 
-// extern TokenDigesterReturn_t tokenTreeDigester_functional(Token **list, int index, int size, variableContext_t &context);
-// extern TokenDigesterReturn_t tokenTreeDigester_conditional(Token **list, int index, int size, variableContext_t &context);
-// extern TokenDigesterReturn_t tokenTreeDigester_loop(Token **list, int index, int size, variableContext_t &context);
+// extern TokenDigesterReturn_t tokenTreeDigester_functional(Token **list, int index, int size, variableContext_t context);
+// extern TokenDigesterReturn_t tokenTreeDigester_conditional(Token **list, int index, int size, variableContext_t context);
+// extern TokenDigesterReturn_t tokenTreeDigester_loop(Token **list, int index, int size, variableContext_t context);
 
-extern TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size);  //, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size);   //, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size); //, variableContext_t &context);
-extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size);  //, variableContext_t &context);
-// extern TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size, variableContext_t &context);
+extern TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size);  //, variableContext_t context);
+extern TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size);   //, variableContext_t context);
+extern TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size); //, variableContext_t context);
+extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size);  //, variableContext_t context);
+// extern TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size, variableContext_t context);
 
 // TupleTreeNode::TupleTreeNode(std::vector<TokenTree *> nodes, bool sanitize) : TreeTuple<TokenTree>(nodes, TokenTreeUseType::DYNAMIC), is_dynamic(true)
 // {
@@ -45,22 +45,22 @@ void CodeBlock::solve(variableContext_t context)
 
 TokenTree *CodeBlock::execute(variableContext_t context)
 {
-    context.push_back(new Context_t(*localContext));
+    // Context_t tmpCtx;
+    // tmpCtx = *localContext;
+    variableContext_t nctx = context;
+    nctx.push_back(localContext);
     // std::cout<<"\nEXECUTING CODEBLOCK SIZE "<<context.size()<<"\n";
-    return symbolicASTexecutor(this->statements, context);
+    return symbolicASTexecutor(this->statements, nctx);
 }
 
 void TupleTreeNode::solve(variableContext_t context)
 {
-    this->elements = sanitizeSequences(this->elements, context, ",", true, false);
+    this->elements = sanitizeSequences(this->elements, context, ",", true, true);
+    // this->elements = symbolicASTexecutor(this->elements, context);
 
-    for (auto i : this->elements)
+    for (auto i = 0; i < this->elements.size(); i++)
     {
-        if (i->getUseType() == TokenTreeUseType::STATIC)
-        {
-            is_dynamic = false;
-            break;
-        }
+        this->elements[i] = symbolicASTexecutor({this->elements[i]}, context);
     }
     is_solved = true;
 }
@@ -79,35 +79,19 @@ void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t con
         // auto nodes = paramVals->get();
         // auto got = sanitizeSequences(nodes, context, ",");
     }
-    *this->params = paramVals;
+    this->params = paramVals;
     delete paramVals; // Delete is, its purpose is over
-    tmp_context = context;
+    // tmp_context = context;
     paramsSet = true;
 }
 
-TokenTree *solveVariablePlaceHolder(TokenTree *node)
-{
-    if (node->getType() == TokenTreeType::VARIABLE)
-    {
-        // If its a defined placeholder (a variable), solve it and return its contents
-        auto val = ((VariableTreeNode *)node)->getValue();
-        if (((VariableTreeNode *)node)->getStoreType() == TokenTreeType::UNKNOWN)
-        {
-            return val;
-            // errorHandler(SyntacticError("A Variable cannot be defined to itself! " + node->stringRepresentation() + " and " + val->stringRepresentation()));
-        }
-        return solveVariablePlaceHolder(val);
-    }
-    return node;
-}
-
-TokenDigesterReturn_t tokenDigester_unknown(Token **list, int index, int size) //, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_unknown(Token **list, int index, int size) //, variableContext_t context)
 {
     errorHandler("Recieved unknown token " + list[index]->data);
     return TokenDigesterReturn_t((TokenTree *)NULL, 1);
 }
 
-TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size) //, variableContext_t &context)
+TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size) //, variableContext_t context)
 {
     auto tok = list[index];
     std::cout << "str[" << tok->data << "]";
@@ -116,7 +100,7 @@ TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size) //
     return TokenDigesterReturn_t(node, 1);
 }
 
-std::vector<TokenTree *> genTreeNodeList(std::vector<Token *> list) //, variableContext_t &context)
+std::vector<TokenTree *> genTreeNodeList(std::vector<Token *> list) //, variableContext_t context)
 {
     Token **tlist = &list[0];
     std::vector<TokenTree *> treelist;

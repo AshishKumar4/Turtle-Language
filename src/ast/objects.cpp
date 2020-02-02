@@ -17,14 +17,14 @@
 namespace turtle
 {
 
-TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context) //, bool symbolic)
+TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t context) //, bool symbolic)
 {
     TokenTree *node = nullptr;
     switch (type)
     {
     case TokenTreeType::LAMBDA:
     {
-        std::cout<<"\nLAMBDA:";
+        std::cout << "\nLAMBDA:";
         node = new LambdaTreeNode((TupleTreeNode *)list[1], ((CodeBlock *)list[2]), context);
         break;
     }
@@ -34,7 +34,8 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
         // We construct a new function!
         node = new FunctionTreeNode(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context);
         // Wrap our new node into a PlaceHolder Variable and put it into the context
-        (*context.back())[list[1]->getName()] = new VariableTreeNode(node, list[1]->getName());
+        auto var = new VariableTreeNode(node, list[1]->getName());
+        (*(context.back())).insert(std::make_pair(list[1]->getName(), var));
         break;
     }
     case TokenTreeType::FUNCTIONAL:
@@ -42,31 +43,28 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
         std::cout << "\nFUNCTIONAL:";
         node = list[0];
         std::cout << node->getName();
+        if (node->getType() == TokenTreeType::VARIABLE)
+        {
+            node = contextSolver((VariableTreeNode *)node, context, true);
+            node = node->execute(context);
+        }
         switch (node->getType())
         {
-        case TokenTreeType::VARIABLE:
-        {
-            node = contextSolver((VariableTreeNode*)node, context, true);
-            node = node->execute();
-            if (node->getType() != TokenTreeType::FUNCTIONAL)
-            {
-                std::cout << (int)node->getType();
-                errorHandler(SyntacticError(node->getName() + " is not a function!"));
-            }
-        }
-        // case TokenTreeType::INBUILT_FUNCTION:
         case TokenTreeType::FUNCTIONAL:
         {
             auto func = ((FunctionTreeNode *)node);
-            auto funccopy = new FunctionTreeNode(*func);
+            auto funccopy = new FunctionTreeNode(func);
+            // printf(" {%x, %x}", func, funccopy);
             funccopy->setParams((TupleTreeNode *)list[1], context);
             // node = func->execute(context);
-            node = funccopy; // We provie an instance of the function
+            node = funccopy; // We provide an instance of the function
+            std::cout<<"["<<node->stringRepresentation()<<"]";
             break;
         }
-        case TokenTreeType::CONSTANT:
+        case TokenTreeType::INBUILT_FUNCTION:
         {
-            errorHandler(NotImplementedError("Constant Function calling"));
+
+            break;
         }
         case TokenTreeType::UNKNOWN:
         {
@@ -91,6 +89,7 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
         // std::cout << tok->stringRepresentation();
         // fflush(stdout);
         node = arg;
+        break;
     }
     case TokenTreeType::INBUILT_FUNCTION:
         std::cout << "INBUILD_FUNCTION:";
@@ -242,7 +241,7 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
     return 0;
 }
 
-TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t &context, bool tree_expantion)
+TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t context, bool tree_expantion)
 {
     int finger = index;
     // TokenTree*     root = genTokenTreeNodeFromType(this->getType());
@@ -315,7 +314,7 @@ TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, 
     {
         // To be executed later
         // Wrap in future object
-        node = new FutureSolutionTreeNode(this->getType(), tmpList, satisfiedRules, context);
+        node = new FutureSolutionTreeNode(this->getType(), tmpList, satisfiedRules);
     }
     else
         node = genTokenTreeNodeFromList(this->getType(), tmpList, satisfiedRules, context);
