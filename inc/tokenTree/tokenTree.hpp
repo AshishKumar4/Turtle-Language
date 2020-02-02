@@ -43,6 +43,7 @@ enum class TokenTreeType
     CONDITIONAL, // Of Type TokenTree
     LOOP,
     DEFINE,
+    LAMBDA,
     RETURN,
     IMPORT,
 
@@ -271,12 +272,6 @@ public:
         // Execution logic
         return this;
     }
-
-    // VariableTreeNode* operator =(TokenTree *obj)
-    // {
-    //     this->setValue(obj);
-    //     return this;
-    // }
 };
 
 typedef std::map<std::string, VariableTreeNode *> Context_t;
@@ -506,16 +501,6 @@ public:
         localContext = new Context_t;
     }
 
-    // CodeBlock(CodeBlock* blk)
-    // {
-    //     Context_t ncontext = *(blk->getContext());
-    //     localContext = new Context_t(ncontext);
-    //     for(auto i :blk->statements)
-    //     {
-    //         this->statements.push_back();
-    //     }
-    // }
-
     virtual std::string stringRepresentation()
     {
         std::string val = "{";
@@ -545,29 +530,13 @@ public:
     void solve(variableContext_t context = GLOBAL_CONTEXT);
 
     TokenTree* execute(variableContext_t context = GLOBAL_CONTEXT);
-
-    // TokenTree* getReturnedValue()
-    // {
-    //     auto val = (*localContext)["$return"];
-    //     TokenTree* result;
-    //     if( val != nullptr )
-    //     {
-    //         result = val->getValue();
-    //     }
-    //     else 
-    //     {
-    //         // Pop from the last node
-    //         result = statements.back();
-    //     }
-    //     return result;
-    // }
 };
 
 class FunctionTreeNode : public TokenTree
 {
+protected:
     // A Function is a collection of several TokenTrees
     variableContext_t tmp_context;
-protected:
     TupleTreeNode* params;
     TupleTreeNode *results; // Is set by returning statements present in the codeblock!
     CodeBlock* block;
@@ -576,7 +545,6 @@ protected:
     bool    paramsSet;
 
 public:
-
     FunctionTreeNode(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t &context) : 
     TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(params), paramsSet(false)
     {
@@ -588,7 +556,7 @@ public:
             auto newContext = this->block->getContext();
             this->params->solve({newContext});
             this->block->solve(context);
-            std::cout<<"FUNCTION_MADE!";
+            // std::cout<<"FUNCTION_MADE!";
             // this->context.push_back(newContext);
         }
         else 
@@ -621,37 +589,69 @@ public:
         // auto blockCopy = new CodeBlock(this->block);
         // this->block->solve(this->context);    // Solve it in the current context
             // Solve it in the current context
-        // if(paramsSet)
-        // {
-        //     auto tok = this->block->execute(this->tmp_context);
-        //     paramsSet = false;
-        // }
-        // else 
-        //     return this;
-        return this;
+        if(paramsSet)
+        {
+            auto tok = this->block->execute(this->tmp_context);
+            paramsSet = false;
+            return tok;
+        }
+        else 
+            return this;
+        // return this;
     }
 
-    TokenTree* execute(variableContext_t context)
+    virtual TokenTree* execute(variableContext_t context)
     {
         return this->block->execute(context);
     }
+};
+
+class LambdaTreeNode : public FunctionTreeNode 
+{
+protected:
+    static Grabs<LambdaTreeNode> grabsToken;
+public:
+    LambdaTreeNode(TupleTreeNode *params, CodeBlock *block, variableContext_t &context) : 
+    FunctionTreeNode("lambda",params, block, context)
+    {
+
+    }
+
+    void *operator new(std::size_t size)
+    {
+        LambdaTreeNode *tok = grabsToken.grab();
+        return tok;
+    }
+
+    void operator delete(void *ptr)
+    {
+        std::cout << "Custom delete!";
+        grabsToken.giveBack((LambdaTreeNode *)ptr);
+    }
+    
+    virtual std::string stringRepresentation()
+    {
+        return " " + name + "_" + params->stringRepresentation() + "_" + block->stringRepresentation();
+    }
+
 };
 
 class ConditionalTreeNode : public TokenTree
 {
     // Can be used as If/Else as well as Switch()
 protected:
-    TupleTreeNode params;
-    TreeTuple<CodeBlock> blocks;
+    std::vector<TupleTreeNode*> params;
+    std::vector<CodeBlock*> blocks;
 
 public:
-    ConditionalTreeNode(TupleTreeNode params, TreeTuple<CodeBlock> blocks) : TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
+    ConditionalTreeNode(std::vector<TupleTreeNode*> params, std::vector<CodeBlock*> blocks) : 
+    TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
     {
     }
 
     virtual TokenTree *execute()
     {
-        // Execution logic
+        
         return this;
     }
 

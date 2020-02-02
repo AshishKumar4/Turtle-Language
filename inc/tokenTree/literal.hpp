@@ -224,7 +224,7 @@ public:
     TokenTree* execute()
     {
         auto [type, list, rules, context] = data;
-        return genTokenTreeNodeFromList(type, list, rules, context);
+        return genTokenTreeNodeFromList(type, list, rules, context)->execute();
     }
 };
 

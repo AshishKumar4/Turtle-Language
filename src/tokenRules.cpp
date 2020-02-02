@@ -134,6 +134,8 @@ void init_derivRules()
 
     derivativeMap[(int)' '] = DERV_TYPE_WHITESPACE;
     derivativeMap[(int)'\t'] = DERV_TYPE_WHITESPACE;
+    derivativeMap[(int)'\n'] = DERV_TYPE_WHITESPACE;
+    derivativeMap[(int)'\r'] = DERV_TYPE_WHITESPACE;
 
     derivativeMap[(int)'\''] = DERV_TYPE_SINGLEQUOTE;
     derivativeMap[(int)'\"'] = DERV_TYPE_DOUBLEQUOTE;

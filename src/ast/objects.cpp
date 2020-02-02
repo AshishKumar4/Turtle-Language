@@ -17,67 +17,53 @@
 namespace turtle
 {
 
-FunctionTreeNode *genNewFunction(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t &context)
-{
-    // Verify that the TupleTreeNode dosen't contain any constants!
-    // if (!params->isDynamic())
-    // {
-    //     errorHandler(SyntacticError("You cannot provide static values in initialization parameters of functions"));
-    //     return nullptr;
-    // }
-
-    FunctionTreeNode *func = new FunctionTreeNode(name, params, block, context);
-    return func;
-}
-
 TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *> &list, std::vector<LiteralRule> &rules, variableContext_t &context) //, bool symbolic)
 {
     TokenTree *node = nullptr;
     switch (type)
     {
+    case TokenTreeType::LAMBDA:
+    {
+        std::cout<<"\nLAMBDA:";
+        node = new LambdaTreeNode((TupleTreeNode *)list[1], ((CodeBlock *)list[2]), context);
+        break;
+    }
     case TokenTreeType::DEFINE:
     {
         std::cout << "\nDEFINE:";
         // We construct a new function!
-        node = genNewFunction(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context); // Name, param, codeblock
+        node = new FunctionTreeNode(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context);
         // Wrap our new node into a PlaceHolder Variable and put it into the context
         (*context.back())[list[1]->getName()] = new VariableTreeNode(node, list[1]->getName());
         break;
     }
     case TokenTreeType::FUNCTIONAL:
     {
-        std::cout << "FUNCTIONAL:";
+        std::cout << "\nFUNCTIONAL:";
         node = list[0];
         std::cout << node->getName();
         switch (node->getType())
         {
         case TokenTreeType::VARIABLE:
         {
-            // Generally Functions are put in variables
-            node = node->execute();//solveVariablePlaceHolder(node);
+            node = contextSolver((VariableTreeNode*)node, context, true);
+            node = node->execute();
             if (node->getType() != TokenTreeType::FUNCTIONAL)
             {
+                std::cout << (int)node->getType();
                 errorHandler(SyntacticError(node->getName() + " is not a function!"));
             }
-
         }
+        // case TokenTreeType::INBUILT_FUNCTION:
         case TokenTreeType::FUNCTIONAL:
-            // case TokenTreeType::INBUILT_FUNCTION:
-            {
-
-                // If its a symbolic call, Just wrap it into a functional obj and pass on!
-                // if (!symbolic)
-                {
-                    auto func = ((FunctionTreeNode *)node);
-                    func->setParams((TupleTreeNode *)list[1], context);
-                    node = func->execute(context);
-                }
-                // else
-                // {
-
-                // }
-                break;
-            }
+        {
+            auto func = ((FunctionTreeNode *)node);
+            auto funccopy = new FunctionTreeNode(*func);
+            funccopy->setParams((TupleTreeNode *)list[1], context);
+            // node = func->execute(context);
+            node = funccopy; // We provie an instance of the function
+            break;
+        }
         case TokenTreeType::CONSTANT:
         {
             errorHandler(NotImplementedError("Constant Function calling"));
@@ -96,13 +82,10 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     }
     case TokenTreeType::RETURN:
     {
-        std::cout << "RETURN ";
+        std::cout << "\nRETURN ";
         // set a value in the current context
         // Solve it just in case
         auto tok = simpleASTmaker(std::vector<TokenTree *>(list.begin() + 1, list.end()), context);
-
-        // if (tok->getType() == TokenTreeType::VARIABLE)
-        //     tok = ((VariableTreeNode *)tok)->getValue();
 
         auto arg = new ReturnTreeNode(tok);
         // std::cout << tok->stringRepresentation();
@@ -119,10 +102,28 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
         std::cout << "CONSTANT:";
         break;
     case TokenTreeType::CONDITIONAL:
-        std::cout << "CONDITIONAL:";
+    {
+        std::cout << "\nCONDITIONAL:";
+        std::vector<TupleTreeNode *> params;
+        std::vector<CodeBlock *> blocks;
+        for (auto i : list)
+        {
+            std::cout << "->" << i->stringRepresentation();
+            if (i->getType() == TokenTreeType::TUPLE)
+            {
+                params.push_back((TupleTreeNode *)i);
+            }
+            else if (i->getType() == TokenTreeType::CODEBLOCK)
+            {
+                blocks.push_back((CodeBlock *)i);
+            }
+        }
+
+        node = new ConditionalTreeNode(params, blocks);
         break;
+    }
     case TokenTreeType::LOOP:
-        std::cout << "LOOP:";
+        std::cout << "\nLOOP:";
         break;
     case TokenTreeType::DUMMY:
         errorHandler(SyntacticError("You cannot use " + list[0]->getName() + " like this!"));
@@ -345,6 +346,13 @@ void init_globalLiteralTable()
     GLOBAL_LITERAL_TABLE["define"] = new LiteralRulesConstruct("define", TokenTreeType::DEFINE,
                                                                {
                                                                    LiteralRule({new NameLiteralConstraint("key_define"), new LiteralConstraint(TokenTreeType::DUMMY), new TupleLiteralConstraint(REPEAT_ZERO_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
+                                                               });
+
+    GLOBAL_LITERAL_TABLE["def"] = GLOBAL_LITERAL_TABLE["define"];
+
+    GLOBAL_LITERAL_TABLE["lambda"] = new LiteralRulesConstruct("lambda", TokenTreeType::LAMBDA,
+                                                               {
+                                                                   LiteralRule({new NameLiteralConstraint("key_lambda"), new TupleLiteralConstraint(REPEAT_ZERO_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
                                                                });
 
     GLOBAL_LITERAL_TABLE["return"] = new LiteralRulesConstruct("return", TokenTreeType::RETURN,

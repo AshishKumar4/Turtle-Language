@@ -15,6 +15,7 @@
 
 namespace turtle 
 {
+VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t &context, bool strict = false);
 std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t &context, std::string seperator=",", bool symbolic_execution = false, bool tree_expantion=true);
 TokenTree* genAST(std::vector<TokenTree*> nodes, variableContext_t &context);
 TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &context, bool tree_expantion = true);

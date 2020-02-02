@@ -22,6 +22,7 @@ Grabs<ConstantTreeNode> ConstantTreeNode::grabsToken("constTreeNodes");
 Grabs<VariableTreeNode> VariableTreeNode::grabsToken("varTreeNodes");
 Grabs<ReturnTreeNode> ReturnTreeNode::grabsToken("returnTreeNodes");
 Grabs<FunctionTreeNode> FunctionTreeNode::grabsToken("funcTreeNodes");
+Grabs<LambdaTreeNode> LambdaTreeNode::grabsToken("lambdaTreeNodes");
 Grabs<TempLiteralTreeNode> TempLiteralTreeNode::grabsToken("tempTreeNodes");
 Grabs<TempLiteralWrapperNode> TempLiteralWrapperNode::grabsToken("tempWrapperTreeNodes");
 

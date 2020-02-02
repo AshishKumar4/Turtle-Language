@@ -39,37 +39,6 @@ TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size) /
         {
             // Lets not solve variables over here!
             VariableTreeNode *newTok = new VariableTreeNode(nullptr, tok->data); //contextSolver(tok, context);
-
-            // If a literal is followed by a bracket, it means something!
-            if (index + 1 < size && list[index + 1]->type == TokenType::BRACKET)
-            {
-                auto brack = list[index + 1]->data;
-                if (brack == "(")
-                {
-                    // Its a function call!
-                    return TokenDigesterReturn_t(new TempLiteralWrapperNode(newTok, GLOBAL_LITERAL_TABLE["__function__"], TokenTreeType::TEMP_LITERAL_WRAPPER), 1);
-                }
-                else if (brack == "[")
-                {
-                    // Its Array Indexing
-                    return TokenDigesterReturn_t(new TempLiteralWrapperNode(newTok, GLOBAL_LITERAL_TABLE["__array__"], TokenTreeType::TEMP_LITERAL_WRAPPER), 1);
-                }
-                // else if (brack == "{")
-                // {
-                //     if (tok->data == "dict" || tok->data == "d")
-                //     {
-                //         auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageDict);
-                //         return TokenDigesterReturn_t(node, popped + 1);
-                //     }
-                //     else if (tok->data == "set" || tok->data == "s")
-                //     {
-                //         auto [node, popped] = bracketSolver(list, index + 1, size, TOKEN_BRACKET_TYPE_TABLE["{"], context, packageSet);
-                //         return TokenDigesterReturn_t(node, popped + 1);
-                //     }
-                //     else
-                //         errorHandler(ParserError("A Literal cannot be followed by Curly Braces!"));
-                // }
-            }
             return TokenDigesterReturn_t(newTok, 1);
         }
         // Must be some keyword

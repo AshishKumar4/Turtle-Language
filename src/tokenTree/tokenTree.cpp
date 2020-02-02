@@ -46,12 +46,13 @@ void CodeBlock::solve(variableContext_t context)
 TokenTree *CodeBlock::execute(variableContext_t context)
 {
     context.push_back(new Context_t(*localContext));
+    // std::cout<<"\nEXECUTING CODEBLOCK SIZE "<<context.size()<<"\n";
     return symbolicASTexecutor(this->statements, context);
 }
 
 void TupleTreeNode::solve(variableContext_t context)
 {
-    this->elements = sanitizeSequences(this->elements, context);
+    this->elements = sanitizeSequences(this->elements, context, ",", true, false);
 
     for (auto i : this->elements)
     {
@@ -80,7 +81,8 @@ void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t con
     }
     *this->params = paramVals;
     delete paramVals; // Delete is, its purpose is over
-    // tmp_context = context;
+    tmp_context = context;
+    paramsSet = true;
 }
 
 TokenTree *solveVariablePlaceHolder(TokenTree *node)
