@@ -31,9 +31,12 @@ std::string interpreter(std::string input)
     //     fflush(stdout);
     // }
 
-    auto ast = turtle::simpleASTmaker(toks, turtle::GLOBAL_CONTEXT);//turtle::genAST(toks, turtle::GLOBAL_CONTEXT);
+    auto ast = turtle::simpleASTmaker(toks, turtle::GLOBAL_CONTEXT, true);
+    // Solve the ast -->
+    // auto node = ast;//[0];
+    auto node = symbolicASTexecutor({ast}, turtle::GLOBAL_CONTEXT);
     // std::cout << std::endl << ast->stringRepresentation();
-    return ast->stringRepresentation();
+    return node->stringRepresentation();
 }
 
 std::vector<std::string> SHELL_HISTORY;

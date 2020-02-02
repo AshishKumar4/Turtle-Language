@@ -37,17 +37,16 @@ extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int 
 void CodeBlock::solve(variableContext_t context)
 {
     context.push_back(localContext);
-    std::cout<<"\nSOLVING_BLOCK";
+    std::cout << "\nSOLVING_BLOCK";
     this->statements = sanitizeSequences(this->statements, context, ";", false, false);
-    std::cout<<"\nBLOCK_SOLVED";
+    std::cout << "\nBLOCK_SOLVED";
     is_solved = true;
 }
 
 TokenTree *CodeBlock::execute(variableContext_t context)
 {
     context.push_back(new Context_t(*localContext));
-    return sanitizeSequences(this->statements, context, ";", true)[0];
-    // return this->getReturnedValue();
+    return symbolicASTexecutor(this->statements, context);
 }
 
 void TupleTreeNode::solve(variableContext_t context)
@@ -67,8 +66,10 @@ void TupleTreeNode::solve(variableContext_t context)
 
 void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t context)
 {
+    // std::cout << "Solving Tuple";
     if (!paramVals->isSolved())
     {
+
         // solve it first
         // auto nctx = this->context;
         // nctx.push_back()
@@ -78,8 +79,8 @@ void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t con
         // auto got = sanitizeSequences(nodes, context, ",");
     }
     *this->params = paramVals;
-    delete paramVals;   // Delete is, its purpose is over
-    tmp_context = context;
+    delete paramVals; // Delete is, its purpose is over
+    // tmp_context = context;
 }
 
 TokenTree *solveVariablePlaceHolder(TokenTree *node)

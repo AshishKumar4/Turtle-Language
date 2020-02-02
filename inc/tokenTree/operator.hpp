@@ -89,7 +89,7 @@ public:
 
     // virtual TokenTree *execute() = 0;
 
-    virtual TokenTree *executeRecursive() = 0;
+    // virtual TokenTree *executeRecursive() = 0;
 };
 
 class UnaryOperatorTreeNode : public OperatorTreeNode
@@ -115,6 +115,11 @@ public:
     {
         // std::cout<<"Custom delete!";
         grabsToken.giveBack((UnaryOperatorTreeNode *)ptr);
+    }
+
+    void setChild(TokenTree *child)
+    {
+        child = child;
     }
 
     TokenTree *execute()
@@ -165,58 +170,89 @@ public:
         grabsToken.giveBack((BinaryOperatorTreeNode *)ptr);
     }
 
+    // TokenTree *execute()
+    // {
+    //     // std::cout << "Trying to execute!";
+    //     std::cout << "\n->{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
+    //     fflush(stdout);
+    //     if (left != nullptr && right != nullptr && left->getType() != TokenTreeType::OPERATOR && right->getType() != TokenTreeType::OPERATOR && !checkIfUnknown(left) && !checkIfUnknownVar(right))
+    //     {
+    //         auto val = logic(left, right);
+    //         if (val != nullptr)
+    //         {
+    //             this->result = val;
+    //             return val;
+    //         }
+    //     }
+    //     return this;
+    // }
+
     TokenTree *execute()
     {
         // std::cout << "Trying to execute!";
-        std::cout << "\n->{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
-        fflush(stdout);
-        if (left != nullptr && right != nullptr && left->getType() != TokenTreeType::OPERATOR && right->getType() != TokenTreeType::OPERATOR && !checkIfUnknown(left) && !checkIfUnknownVar(right))
-        {
-            auto val = logic(left, right);
-            if (val != nullptr)
-            {
-                this->result = val;
-                return val;
-            }
-        }
-        return this;
-    }
-
-    TokenTree *executeRecursive()
-    {
+        // std::cout << "\n->r{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
         std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
         fflush(stdout);
         auto l = left;
         auto r = right;
-        if (l != nullptr && r != nullptr && !checkIfUnknown(l) && !checkIfUnknown(r))
+
+        if (l != nullptr && r != nullptr
+            //  && l->getType() != TokenTreeType::OPERATOR
+            //  && r->getType() != TokenTreeType::OPERATOR
+            && !checkIfUnknown(l) && !checkIfUnknownVar(r))
         {
             if (!(this->opType & (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE))
             {
-                l = solveVariablePlaceHolder(l);
-                r = solveVariablePlaceHolder(r);
-
-                // Now also solve for future literals and other fancy stuffs
                 l = l->execute();
-                r = r->execute();
             }
-            if (r->getType() == TokenTreeType::OPERATOR)
-            {
-                r = ((OperatorTreeNode *)r)->executeRecursive();
-            }
-            if (l->getType() == TokenTreeType::OPERATOR)
-            {
-                l = ((OperatorTreeNode *)l)->executeRecursive();
-            }
+            r = r->execute();
+
             auto val = logic(l, r);
             if (val != nullptr)
             {
-                std::cout << " [solved]=>" << val->stringRepresentation();
                 this->result = val;
                 return val;
             }
         }
+        // std::cout << "\n->r[" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "]";
         return this;
     }
+
+    // TokenTree *executeRecursive()
+    // {
+    //     std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
+    //     fflush(stdout);
+    //     auto l = left;
+    //     auto r = right;
+    //     if (l != nullptr && r != nullptr && !checkIfUnknown(l) && !checkIfUnknown(r))
+    //     {
+    //         if (!(this->opType & (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE))
+    //         {
+    //             l = solveVariablePlaceHolder(l);
+    //             r = solveVariablePlaceHolder(r);
+
+    //             // Now also solve for future literals and other fancy stuffs
+    //             l = l->execute();
+    //             r = r->execute();
+    //         }
+    //         if (r->getType() == TokenTreeType::OPERATOR)
+    //         {
+    //             r = ((OperatorTreeNode *)r)->executeRecursive();
+    //         }
+    //         if (l->getType() == TokenTreeType::OPERATOR)
+    //         {
+    //             l = ((OperatorTreeNode *)l)->executeRecursive();
+    //         }
+    //         auto val = logic(l, r);
+    //         if (val != nullptr)
+    //         {
+    //             std::cout << " [solved]=>" << val->stringRepresentation();
+    //             this->result = val;
+    //             return val;
+    //         }
+    //     }
+    //     return this;
+    // }
 
     std::string stringRepresentation()
     {

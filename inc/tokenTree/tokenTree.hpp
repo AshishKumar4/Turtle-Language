@@ -165,7 +165,7 @@ public:
         {
             return this;
         }
-        return holder;
+        return holder->execute();
     }
 
     auto getStoreType()
@@ -239,7 +239,7 @@ public:
         {
             return this;
         }
-        return holder;
+        return holder->execute();
     }
 
     auto getStoreType()
@@ -573,10 +573,12 @@ protected:
     CodeBlock* block;
     static Grabs<FunctionTreeNode> grabsToken;
 
+    bool    paramsSet;
+
 public:
 
     FunctionTreeNode(std::string name, TupleTreeNode *params, CodeBlock *block, variableContext_t &context) : 
-    TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(params)
+    TokenTree(TokenTreeType::FUNCTIONAL, TokenTreeUseType::DYNAMIC, name), block(block), params(params), paramsSet(false)
     {
         std::cout << "<func " << name << " " << params->getSize() << "> ";
         if (this->params->isSolved() == false)
@@ -619,7 +621,19 @@ public:
         // auto blockCopy = new CodeBlock(this->block);
         // this->block->solve(this->context);    // Solve it in the current context
             // Solve it in the current context
-        return this->block->execute(this->tmp_context);
+        // if(paramsSet)
+        // {
+        //     auto tok = this->block->execute(this->tmp_context);
+        //     paramsSet = false;
+        // }
+        // else 
+        //     return this;
+        return this;
+    }
+
+    TokenTree* execute(variableContext_t context)
+    {
+        return this->block->execute(context);
     }
 };
 

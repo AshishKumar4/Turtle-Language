@@ -146,7 +146,7 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
 {
     // Pop elements while There are elements of higher precedence in the stack
     // or equal precedence but the operator is left associative
-    TokenTree* val;
+    TokenTree *val;
     if (opstack.back()->getOptype() & (uint)OperatorType::BINARY)
     {
         auto op = (BinaryOperatorTreeNode *)opstack.back();
@@ -154,7 +154,7 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
 
         // generate Tree out of these operators
         // Pop two elements out of outQueue
-        if(outQueue.size() < 2) 
+        if (outQueue.size() < 2)
         {
             outQueue.push_back(op);
             return;
@@ -168,11 +168,29 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
         op->setRight(elm1);
         op->setLeft(elm2);
 
-        val = op->execute();
+        val = op;//op->execute();
     }
-    else 
+    else
     {
-        errorHandler(NotImplementedError("Unary Operators"));
+        // errorHandler(NotImplementedError("Unary Operators"));
+
+        auto op = (UnaryOperatorTreeNode *)opstack.back();
+        opstack.pop_back();
+
+        // generate Tree out of these operators
+        // Pop two elements out of outQueue
+        if (outQueue.size() < 1)
+        {
+            outQueue.push_back(op);
+            return;
+        }
+        auto elm1 = outQueue.back();
+        outQueue.pop_back();
+
+        // Make them as the two nodes of the Operator
+        op->setChild(elm1);
+
+        val = op;//->execute();
     }
     // Now push this back to the outQueue
     outQueue.push_back(val);
@@ -208,7 +226,7 @@ TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t
             case TokenTreeType::OPERATOR:
             {
                 //Solve the operator's nodes
-                temp = ((OperatorTreeNode *)tok)->executeRecursive();
+                temp = ((OperatorTreeNode *)tok)->execute();
                 // std::cout << "HERE";
                 break;
             }
@@ -278,26 +296,14 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
             case TokenTreeType::OPERATOR:
             {
                 OperatorTreeNode *node = (OperatorTreeNode *)i;
-                if (node->getOptype() & (uint)OperatorType::BINARY)
+
+                while (opstack.size() and
+                       (opstack.back()->getPrecedence() < node->getPrecedence() or
+                        (opstack.back()->getPrecedence() == node->getPrecedence() and node->getAssociativity() == OperatorAssociativity::LEFT)))
                 {
-                    while (opstack.size() and
-                           (opstack.back()->getPrecedence() < node->getPrecedence() or
-                            (opstack.back()->getPrecedence() == node->getPrecedence() and node->getAssociativity() == OperatorAssociativity::LEFT)))
-                    {
-                        // std::cout << "We are here!";
-                        // fflush(stdout);
-                        transferOpToOutQueue(opstack, outQueue);
-                    }
-                    opstack.push_back(node);
+                    transferOpToOutQueue(opstack, outQueue);
                 }
-                else if (node->getOptype() & (uint)OperatorType::UNARY)
-                {
-                    errorHandler(NotImplementedError("Unary Operator"));
-                }
-                else
-                {
-                    errorHandler(NotImplementedError("Ternary Operator"));
-                }
+                opstack.push_back(node);
                 break;
             }
             case TokenTreeType::TUPLE:
@@ -309,14 +315,6 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
                 }
             }
             case TokenTreeType::VARIABLE:
-            // {
-            //     auto node = solveVariablePlaceHolder(i);
-            //     if(node != nullptr)
-            //         outQueue.push_back(node);
-            //     else
-            //         outQueue.push_back(i);
-            //     break;
-            // }
             case TokenTreeType::CONSTANT:
             case TokenTreeType::INBUILT_FUNCTION:
             case TokenTreeType::FUNCTIONAL:
@@ -339,7 +337,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t &con
         {
             // std::cout << "We are here!";
             // fflush(stdout);
-            std::cout<<" -->> " << outQueue.size();
+            std::cout << " -->> " << outQueue.size();
             transferOpToOutQueue(opstack, outQueue);
             // outQueue.push_back(opstack.back());
             // opstack.pop_back();

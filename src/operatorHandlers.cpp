@@ -20,6 +20,35 @@ TokenTree *operator_binaryTemplate(TokenTree *left, TokenTree *right)
     return nullptr;
 }
 
+// TokenTree *operator_unaryAddition(TokenTree *node)
+// {
+//     node = solveVariablePlaceHolder(node);
+//     switch (node->getType())
+//     {
+//     case TokenTreeType::CONSTANT:
+//     {
+//         // Only constants can come over here as Variables got solved in the parser stage,
+//         // and Unknowns aren't allowed to get solved here.
+//         // Get MemoryWrapper objects
+//         auto leftobj = ((ConstantTreeNode *)node)->getObject();
+//         auto result = ((*leftobj));
+//         return new ConstantTreeNode(result, result->getResultString());
+//         break;
+//     }
+//     case TokenTreeType::VARIABLE:
+//     case TokenTreeType::OPERATOR:
+//     case TokenTreeType::FUTURE_LITERAL:
+//     default:
+//         errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
+//     }
+//     return nullptr;
+// }
+
+// TokenTree *operator_unarySubtraction(TokenTree *node)
+// {
+//     return nullptr;
+// }
+
 bool isVariableUnknown(VariableTreeNode *left, VariableTreeNode *right)
 {
     if (left->getStoreType() == TokenTreeType::UNKNOWN)
@@ -55,10 +84,7 @@ TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
-            std::cout << "We are here!";
-            return nullptr;
         case TokenTreeType::OPERATOR:
-            return nullptr;
         case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
@@ -90,9 +116,7 @@ TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
-            return nullptr;
         case TokenTreeType::OPERATOR:
-            return nullptr;
         case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
@@ -123,10 +147,7 @@ TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
-            // errorHandler
-            return nullptr;
         case TokenTreeType::OPERATOR:
-            return nullptr;
         case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
@@ -157,9 +178,7 @@ TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
             break;
         }
         case TokenTreeType::VARIABLE:
-            return nullptr;
         case TokenTreeType::OPERATOR:
-            return nullptr;
         case TokenTreeType::FUTURE_LITERAL:
             return nullptr;
         default:
@@ -180,33 +199,24 @@ TokenTree *operator_binaryEqual(TokenTree *left, TokenTree *right)
     case TokenTreeType::VARIABLE:
     {
         right = solveVariablePlaceHolder(right);
-        // if (right->getType() == TokenTreeType::VARIABLE)
-        // {
-        //     if (((VariableTreeNode *)right)->getStoreType() == TokenTreeType::UNKNOWN)
-        //         right = nullptr;
-        //     else
-        //         right = ((VariableTreeNode *)right)->getValue();
-        // }
-        if(right == nullptr)
+        if (right == nullptr)
         {
-            // std::cout << "RIGHT_IS_NULL";
             return nullptr;
         }
-        *((VariableTreeNode *)left) = right;//->setValue(right);
-        // std::cout<< " EQUAL_ASSIGNMENT!";
+        *((VariableTreeNode *)left) = right;
         return left;
     }
     case TokenTreeType::TUPLE:
     {
         right = solveVariablePlaceHolder(right);
-        if(right == nullptr)
+        if (right == nullptr)
         {
             return nullptr;
         }
-        if(right->getType() == TokenTreeType::TUPLE)
+        if (right->getType() == TokenTreeType::TUPLE)
         {
-            auto tup = (TupleTreeNode*)left;
-            *tup = (TupleTreeNode*)right;
+            auto tup = (TupleTreeNode *)left;
+            *tup = (TupleTreeNode *)right;
         }
         else
         {
