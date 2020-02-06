@@ -35,7 +35,9 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
         node = new FunctionTreeNode(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context);
         // Wrap our new node into a PlaceHolder Variable and put it into the context
         auto var = new VariableTreeNode(node, list[1]->getName());
-        (*(context.back())).insert(std::make_pair(list[1]->getName(), var));
+        // (*(context.back())).insert(std::make_pair(list[1]->getName(), var));
+        // std::cout<<"\nSAVED IN CONTEXT: "<<list[1]->getName()<<"\n";
+        (*(context.back()))[list[1]->getName()] = var;
         break;
     }
     case TokenTreeType::FUNCTIONAL:
@@ -123,6 +125,14 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     }
     case TokenTreeType::LOOP:
         std::cout << "\nLOOP:";
+        if(list[0]->getName() == "key_while")
+        {
+            node = new WhileLoopTreeNode((TupleTreeNode*)list[1], (CodeBlock*)list[2]);
+        }
+        else 
+        {
+            errorHandler(NotImplementedError(list[0]->getName() + " kind of loops!"));
+        }
         break;
     case TokenTreeType::DUMMY:
         errorHandler(SyntacticError("You cannot use " + list[0]->getName() + " like this!"));
@@ -333,8 +343,8 @@ void init_globalLiteralTable()
     // TODO : Define this
     GLOBAL_LITERAL_TABLE["if"] = new LiteralRulesConstruct("if", TokenTreeType::CONDITIONAL,
                                                            {
-                                                               LiteralRule({new NameLiteralConstraint("key_if"), new TupleLiteralConstraint(1), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
-                                                               LiteralRule({new NameLiteralConstraint("key_elif"), new TupleLiteralConstraint(1), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, REPEAT_ZERO_OR_MANY),
+                                                               LiteralRule({new NameLiteralConstraint("key_if"), new TupleLiteralConstraint(REPEAT_ONE_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
+                                                               LiteralRule({new NameLiteralConstraint("key_elif"), new TupleLiteralConstraint(REPEAT_ONE_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, REPEAT_ZERO_OR_MANY),
                                                                LiteralRule({new NameLiteralConstraint("key_else"), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, REPEAT_ZERO_OR_ONE),
                                                            });
 
@@ -361,6 +371,15 @@ void init_globalLiteralTable()
     GLOBAL_LITERAL_TABLE["while"] = new LiteralRulesConstruct("while", TokenTreeType::LOOP,
                                                               {
                                                                   LiteralRule({new NameLiteralConstraint("key_while"), new TupleLiteralConstraint(1), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
+                                                              });
+
+    GLOBAL_LITERAL_TABLE["for"] = new LiteralRulesConstruct("for", TokenTreeType::LOOP,
+                                                              {
+                                                                  LiteralRule({new NameLiteralConstraint("key_for"), 
+                                                                  new TupleLiteralConstraint(REPEAT_ONE_OR_MANY), 
+                                                                  new NameLiteralConstraint("key_in"), 
+                                                                  new LiteralConstraint(TokenTreeType::LIST),
+                                                                  new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
                                                               });
 
     GLOBAL_LITERAL_TABLE["print"] = new LiteralRulesConstruct("print", TokenTreeType::INBUILT_FUNCTION,

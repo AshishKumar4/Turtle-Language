@@ -58,16 +58,17 @@ void TupleTreeNode::solve(variableContext_t context)
     this->elements = sanitizeSequences(this->elements, context, ",", true, true);
     // this->elements = symbolicASTexecutor(this->elements, context);
 
-    for (auto i = 0; i < this->elements.size(); i++)
-    {
-        this->elements[i] = symbolicASTexecutor({this->elements[i]}, context);
-    }
+    // for (auto i = 0; i < this->elements.size(); i++)
+    // {
+    //     this->elements[i] = symbolicASTexecutor({this->elements[i]}, context);
+    // }
     is_solved = true;
 }
 
 void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t context)
 {
-    // std::cout << "Solving Tuple";
+    std::cout << "\nSET PARAMETERS\n";
+    fflush(stdout);
     if (!paramVals->isSolved())
     {
 
@@ -76,12 +77,11 @@ void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t con
         // nctx.push_back()
         paramVals = new TupleTreeNode(*paramVals);
         paramVals->solve(context); // in the higher context
+        // paramVals->execute(context);
         // auto nodes = paramVals->get();
         // auto got = sanitizeSequences(nodes, context, ",");
     }
-    this->params = paramVals;
-    delete paramVals; // Delete is, its purpose is over
-    // tmp_context = context;
+    this->tmpParams = paramVals;
     paramsSet = true;
 }
 

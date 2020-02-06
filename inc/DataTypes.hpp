@@ -86,6 +86,8 @@ public:
     virtual MemoryWrapper* operator - (MemoryWrapper &obj);
     virtual MemoryWrapper* operator * (MemoryWrapper &obj);
     virtual MemoryWrapper* operator / (MemoryWrapper &obj);
+
+    virtual  bool getBooleanValue() = 0;
 };
 
 
@@ -115,6 +117,16 @@ public:
     auto getValue()
     {
         return val;
+    }
+
+    bool getBooleanValue()
+    {
+        if(val != 0)
+        {
+            return true;
+        }
+        std::cout<< " << " << val;
+        return false;
     }
 
     MemoryWrapper* operator +(MemoryWrapper  &obj)
@@ -220,6 +232,15 @@ public:
     // {
 
     // }
+
+    bool getBooleanValue()
+    {
+        if(val != "")
+        {
+            return true;
+        }
+        return false;
+    }
 
     std::string getResultString()
     {

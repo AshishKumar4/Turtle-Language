@@ -44,6 +44,7 @@ enum class TokenTreeType
     LOOP,
     DEFINE,
     LAMBDA,
+    BREAK,
     RETURN,
     IMPORT,
 
@@ -207,18 +208,11 @@ public:
 
     TokenTree *execute(variableContext_t context)
     {
-        std::cout << "I CAME HERE";
         fflush(stdout);
         // Execution logic
 
         if (holder == nullptr)
         {
-            // auto var = contextSolver(this, context, true);
-            // if (var == this)
-            // {
-            //     return this;
-            // }
-            // holder = var->holder;
             return this;
         }
         return holder->execute(context);
@@ -234,6 +228,19 @@ public:
     // {
     //     if(obj->getStoreType() != )
     // }
+};
+
+class BreakTreeNode : public TokenTree
+{
+public:
+    BreakTreeNode() : TokenTree(TokenTreeType::BREAK, TokenTreeUseType::STATIC, "break")
+    {
+    }
+
+    TokenTree *execute(variableContext_t context)
+    {
+        return this;
+    }
 };
 
 class ReturnTreeNode : public TokenTree
@@ -359,6 +366,10 @@ public:
     virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
+        if (elements.size() == 1)
+        {
+            return elements[0];
+        }
         return this;
     }
 };
@@ -421,6 +432,25 @@ public:
                 // tok = solveVariablePlaceHolder(tok);
                 *((VariableTreeNode *)this->elements[i]) = tok;
             }
+        }
+        return this;
+    }
+
+    virtual TokenTree *execute(variableContext_t context)
+    {
+        // Execution logic
+        if (elements.size() == 1)
+        {
+            return elements[0]->execute(context);
+        }
+        else 
+        {
+            // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
+            for(int i = 0; i < elements.size(); i++)
+            {
+                elements[i] = elements[i]->execute(context);//->execute(context);
+            }
+            // return tuple;
         }
         return this;
     }
@@ -492,6 +522,16 @@ public:
         return obj;
     }
 
+    bool booleanValue()
+    {
+        auto val = obj->getBooleanValue();
+        if (val)
+            std::cout << "\nTrue\n";
+        else
+            std::cout << "\nFalse\n";
+        return val;
+    }
+
     virtual std::string stringRepresentation()
     {
         return obj->getResultString();
@@ -561,6 +601,7 @@ public:
 
 class FunctionTreeNode : public TokenTree
 {
+    TupleTreeNode* tmpParams;
 protected:
     // A Function is a collection of several TokenTrees
     variableContext_t tmp_context;
@@ -589,8 +630,6 @@ public:
             auto newContext = this->block->getContext();
             this->params.solve({newContext});
             this->block->solve(context);
-            // std::cout<<"FUNCTION_MADE!";
-            // this->context.push_back(newContext);
         }
         else
         {
@@ -625,7 +664,20 @@ public:
         if (paramsSet)
         {
             CodeBlock block = *(this->block);
+            tmpParams->execute(context);
+            this->params = tmpParams;
+
             auto tok = block.execute(context);
+            if (tok->getType() == TokenTreeType::RETURN)
+            {
+                // Because Only functions solve Return Types!
+                tok = ((ReturnTreeNode *)tok)->getValue()->execute(context);
+            }
+            else if (tok->getType() == TokenTreeType::BREAK)
+            {
+                errorHandler(SyntacticError("Break statements can't be used to exit Functions!"));
+            }
+            delete tmpParams;
             paramsSet = false;
             std::cout << "[" << tok->stringRepresentation() << "]";
             return tok;
@@ -694,15 +746,68 @@ class ConditionalTreeNode : public TokenTree
 protected:
     std::vector<TupleTreeNode *> params;
     std::vector<CodeBlock *> blocks;
-
+    static Grabs<ConditionalTreeNode> grabsToken;
 public:
     ConditionalTreeNode(std::vector<TupleTreeNode *> params, std::vector<CodeBlock *> blocks) : TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
     {
+        // if(params.size() != blocks.size())
+        // {
+        //     errorHandler(SyntacticError("Number of blocks don't match number of params"));
+        // }
+        // We don't really need this because its handled by the parser itself
+    }
+
+    void *operator new(std::size_t size)
+    {
+        ConditionalTreeNode *tok = grabsToken.grab();
+        return tok;
+    }
+
+    void operator delete(void *ptr)
+    {
+        std::cout << "Custom delete!";
+        grabsToken.giveBack((ConditionalTreeNode *)ptr);
     }
 
     virtual TokenTree *execute(variableContext_t context)
     {
-
+        // Solve its parameters
+        for (int i = 0; i < params.size(); i++)
+        {
+            params[i]->solve(context);
+            int flag = 1;
+            for (int j = 0; j < params[i]->getSize(); j++)
+            {
+                auto tok = params[i]->get(j)->execute(context);
+                if (tok->getType() == TokenTreeType::CONSTANT)
+                {
+                    if (((ConstantTreeNode *)tok)->booleanValue() == false)
+                    {
+                        flag = 0;
+                        break;
+                    }
+                }
+                else
+                {
+                    flag = 0;
+                    break;
+                }
+            }
+            if (flag)
+            {
+                printf("\nGot a block to solve!\n");
+                // Execute the First 'True' param's corresponding block
+                blocks[i]->solve(context);
+                return blocks[i]->execute(context);
+            }
+            // Its true,
+        }
+        if (params.size() < blocks.size())
+        {
+            // There is an else block,
+            blocks.back()->solve(context);
+            return blocks.back()->execute(context);
+        }
         return this;
     }
 
@@ -710,6 +815,95 @@ public:
     // {
     //     return
     // }
+};
+
+class LoopTreeNode : public TokenTree
+{
+protected:
+    TupleTreeNode params;
+    CodeBlock *block;
+    static Grabs<LoopTreeNode> grabsToken;
+
+public:
+    LoopTreeNode(TupleTreeNode *params, CodeBlock *block) : TokenTree(TokenTreeType::LOOP, TokenTreeUseType::DYNAMIC, "loop"), params(*params), block(block)
+    {
+    }
+
+    void *operator new(std::size_t size)
+    {
+        LoopTreeNode *tok = grabsToken.grab();
+        return tok;
+    }
+
+    void operator delete(void *ptr)
+    {
+        std::cout << "Custom delete!";
+        grabsToken.giveBack((LoopTreeNode *)ptr);
+    }
+
+    virtual TokenTree *execute(variableContext_t context)
+    {
+        return this;
+    }
+};
+
+class WhileLoopTreeNode : public LoopTreeNode
+{
+protected:
+public:
+    WhileLoopTreeNode(TupleTreeNode *params, CodeBlock *block) : LoopTreeNode(params, block)
+    {
+    }
+
+    TokenTree *execute(variableContext_t context)
+    {
+        params.solve(context);
+        block->solve(context);
+        TokenTree *val = this;
+        while (true)
+        {
+            // If all elements of the parameter tuple are Defined and True, Keep on executing
+            int flag = 1;
+            for (int j = 0; j < params.getSize(); j++)
+            {
+                auto tok = params.get(j)->execute(context);
+                std::cout<<"\n>>>>> " << tok->stringRepresentation() << "=>"<<params.get(j)->stringRepresentation()<<"\n";
+                if (tok->getType() == TokenTreeType::CONSTANT)
+                {
+                    if (((ConstantTreeNode *)tok)->booleanValue() == false)
+                    {
+                        flag = 0;
+                        break;
+                    }
+                }
+                else
+                {
+                    flag = 0;
+                    break;
+                }
+            }
+            if (flag)
+            {
+                // printf("\nGot a block to solve!\n");
+                printf("\nSolving loop!");
+                // Execute the First 'True' param's corresponding block
+                val = block->execute(context);
+                if (val->getType() == TokenTreeType::BREAK)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        return val;
+    }
+};
+
+class ForLoopTreeNode : public LoopTreeNode
+{
 };
 
 typedef std::tuple<TokenTree *, int> TokenDigesterReturn_t;

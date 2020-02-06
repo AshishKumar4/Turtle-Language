@@ -1,0 +1,47 @@
+a = 10;
+
+define test(a,b) 
+{ 
+    a * 4 + b 
+};
+
+define new(a,b) 
+{
+    o = test(a*a, b)*test(4, a+b); 
+    test(o,o); 
+};
+
+wow = lambda (x) { x("THIS WORKS!") };
+
+sum = 0;
+
+i = 10;
+
+while (i)
+{
+    sum = sum + i;
+    i = i - 1;
+};
+
+o = 0;
+if(0)
+{
+    o = 1;
+}
+elif (1)
+{
+    o = 2;
+}
+else
+{
+    o = 3;
+};
+
+x = test(4,5);
+y = new(4,5);
+z = new(2,3);
+
+u = test(new(4,5), new(2,3));
+v = test(y, z);
+
+(x,y,z, sum, o, wow(lambda (x){ "WOW " + x } ), u, v);

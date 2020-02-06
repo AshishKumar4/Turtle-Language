@@ -1,0 +1,2 @@
+define new(a,b){ a*b };
+new(new(4,5), 6);
