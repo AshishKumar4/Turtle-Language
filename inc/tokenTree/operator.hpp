@@ -184,7 +184,7 @@ public:
     virtual TokenTree *execute(variableContext_t context)
     {
         // std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
-        // fflush(stdout);
+        fflush(stdout);
         auto l = left;
         auto r = right;
 
@@ -216,7 +216,7 @@ public:
         return this->getName();
     }
 };
-
+ 
 class BinaryAdditionOperatorTreeNode : public BinaryOperatorTreeNode
 {
 public:
@@ -283,6 +283,24 @@ public:
     }
 };
 
+class BinaryModuloOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryModuloOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), "%", 5, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left % right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
 class BinaryEqualOperatorTreeNode : public BinaryOperatorTreeNode
 {
 public:
@@ -327,6 +345,98 @@ public:
     TokenTree* logic(TokenTree* left, TokenTree* right)
     {
         return nullptr;
+    }
+};
+
+class BinaryLessthanOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryLessthanOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), "<", 9, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left < right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
+class BinaryGreaterthanOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryGreaterthanOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), ">", 9, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left > right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
+class BinaryBooleanEqualOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryBooleanEqualOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), "==", 10, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left == right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
+
+class BinaryLessthanEqualOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryLessthanEqualOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), "<=", 9, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left <= right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
+
+class BinaryGreaterthanEqualOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryGreaterthanEqualOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), ">=", 9, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left >= right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
     }
 };
 

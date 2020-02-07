@@ -56,12 +56,6 @@ TokenTree *CodeBlock::execute(variableContext_t context)
 void TupleTreeNode::solve(variableContext_t context)
 {
     this->elements = sanitizeSequences(this->elements, context, ",", true, true);
-    // this->elements = symbolicASTexecutor(this->elements, context);
-
-    // for (auto i = 0; i < this->elements.size(); i++)
-    // {
-    //     this->elements[i] = symbolicASTexecutor({this->elements[i]}, context);
-    // }
     is_solved = true;
 }
 
@@ -71,15 +65,8 @@ void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t con
     fflush(stdout);
     if (!paramVals->isSolved())
     {
-
-        // solve it first
-        // auto nctx = this->context;
-        // nctx.push_back()
         paramVals = new TupleTreeNode(*paramVals);
         paramVals->solve(context); // in the higher context
-        // paramVals->execute(context);
-        // auto nodes = paramVals->get();
-        // auto got = sanitizeSequences(nodes, context, ",");
     }
     this->tmpParams = paramVals;
     paramsSet = true;

@@ -59,7 +59,14 @@ void init_operatorTypeTable()
     OPERATOR_BINARY_CLASS_TABLE["-"] = &createBinaryOperator<BinarySubtractionOperatorTreeNode>;
     OPERATOR_BINARY_CLASS_TABLE["*"] = &createBinaryOperator<BinaryMultiplicationOperatorTreeNode>;
     OPERATOR_BINARY_CLASS_TABLE["/"] = &createBinaryOperator<BinaryDivisionOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["%"] = &createBinaryOperator<BinaryModuloOperatorTreeNode>;
     OPERATOR_BINARY_CLASS_TABLE["="] = &createBinaryOperator<BinaryEqualOperatorTreeNode>;
+
+    OPERATOR_BINARY_CLASS_TABLE["=="] = &createBinaryOperator<BinaryBooleanEqualOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE[">"] = &createBinaryOperator<BinaryGreaterthanOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["<"] = &createBinaryOperator<BinaryLessthanOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["<="] = &createBinaryOperator<BinaryLessthanEqualOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE[">="] = &createBinaryOperator<BinaryGreaterthanEqualOperatorTreeNode>;
 
     OPERATOR_BINARY_CLASS_TABLE[","] = &createBinaryCommaOperator;
     OPERATOR_BINARY_CLASS_TABLE[";"] = &createBinarySemicolonOperator;
@@ -118,6 +125,7 @@ TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)/
     auto tok = list[index];
     if(index == 0 || list[index-1]->type == TokenType::OPERATOR)
     {
+        // errorHandler(NotImplementedError("Unary Operators"));
         // Its a Unary Operator!
         if(TOKEN_OPERATOR_UNARY_TYPE_TABLE.find(tok->data) == TOKEN_OPERATOR_UNARY_TYPE_TABLE.end())
         {

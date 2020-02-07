@@ -370,7 +370,7 @@ void init_globalLiteralTable()
 
     GLOBAL_LITERAL_TABLE["while"] = new LiteralRulesConstruct("while", TokenTreeType::LOOP,
                                                               {
-                                                                  LiteralRule({new NameLiteralConstraint("key_while"), new TupleLiteralConstraint(1), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
+                                                                  LiteralRule({new NameLiteralConstraint("key_while"), new TupleLiteralConstraint(REPEAT_ONE_OR_MANY), new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
                                                               });
 
     GLOBAL_LITERAL_TABLE["for"] = new LiteralRulesConstruct("for", TokenTreeType::LOOP,

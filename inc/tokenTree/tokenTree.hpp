@@ -505,6 +505,12 @@ public:
     virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
     virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
     virtual MemHolderTreeNode* operator * (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator % (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator < (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator > (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator == (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator >= (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator <= (MemHolderTreeNode* obj) = 0;
 };
 
 
@@ -579,6 +585,42 @@ public:
     MemHolderTreeNode* operator *(MemHolderTreeNode* right)
     {
         memObj result = this->obj * ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator <(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj < ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator >(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj > ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator ==(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj == ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator >=(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj >= ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator <=(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj <= ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator %(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj % ((ConstantTreeNode<memObj>*)right)->obj;
         return new ConstantTreeNode<memObj>(result, std::string(result));
     }
 };

@@ -60,6 +60,43 @@ struct turtleString
         errorHandler(NotImplementedError("Division of String types"));
         return obj;
     }
+
+    turtleString operator < (turtleString &obj)
+    {
+        // errorHandler(NotImplementedError("Division of String types"));
+        return (std::string)str < (std::string)obj;
+    }
+
+    turtleString operator > (turtleString &obj)
+    {
+        // errorHandler(NotImplementedError("Division of String types"));
+        return (std::string)str > (std::string)obj;
+    }
+
+    turtleString operator == (turtleString &obj)
+    {
+        // errorHandler(NotImplementedError("Division of String types"));
+        return (std::string)str == (std::string)obj;
+    }
+
+    turtleString operator <= (turtleString &obj)
+    {
+        // errorHandler(NotImplementedError("Division of String types"));
+        return (std::string)str <= (std::string)obj;
+    }
+
+    turtleString operator >= (turtleString &obj)
+    {
+        // errorHandler(NotImplementedError("Division of String types"));
+        return (std::string)str >= (std::string)obj;
+    } 
+    
+    turtleString operator % (turtleString &obj)
+    {
+        errorHandler(NotImplementedError("Modulo of String types"));
+        // return (std::string)str % (std::string)obj;
+        return obj;
+    }
 };
 
 struct turtleFloat
