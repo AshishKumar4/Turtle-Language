@@ -10,6 +10,7 @@
 
 #include <exception>
 #include <map>
+#include <typeindex>
 
 namespace turtle
 {
@@ -34,8 +35,35 @@ std::string ALL_OPERATORS[] = {"++", "--", "+", "-", "!", "=", "*", "/", "**", "
                                "|", "&&", "||", "<", ">", "<<", ">>", "%", "<=",
                                ">=", "-=", "+=", "*=", "/=", "|=", "&=", "^=", "#", ",", ":"};
 
+template <class Derived>
+BinaryOperatorTreeNode* createBinaryOperator()
+{
+        return new Derived;
+}
+
+BinaryOperatorTreeNode* createBinaryCommaOperator()
+{
+    return new BinarySeperatorOperatorTreeNode(",");
+}
+
+BinaryOperatorTreeNode* createBinarySemicolonOperator()
+{
+    return new BinarySeperatorOperatorTreeNode(";");
+}
+
+std::map<std::string, BinaryOperatorTreeNode*(*)()> OPERATOR_BINARY_CLASS_TABLE;
+
 void init_operatorTypeTable()
 {
+    OPERATOR_BINARY_CLASS_TABLE["+"] = &createBinaryOperator<BinaryAdditionOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["-"] = &createBinaryOperator<BinarySubtractionOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["*"] = &createBinaryOperator<BinaryMultiplicationOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["/"] = &createBinaryOperator<BinaryDivisionOperatorTreeNode>;
+    OPERATOR_BINARY_CLASS_TABLE["="] = &createBinaryOperator<BinaryEqualOperatorTreeNode>;
+
+    OPERATOR_BINARY_CLASS_TABLE[","] = &createBinaryCommaOperator;
+    OPERATOR_BINARY_CLASS_TABLE[";"] = &createBinarySemicolonOperator;
+
     TOKEN_OPERATOR_UNARY_TYPE_TABLE["++"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
     TOKEN_OPERATOR_UNARY_TYPE_TABLE["--"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
 
@@ -110,23 +138,25 @@ TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)/
     {
         // We assumes its a Binary Operator!
         // Its a Binary Operator!
-        if(TOKEN_OPERATOR_BINARY_TYPE_TABLE.find(tok->data) == TOKEN_OPERATOR_BINARY_TYPE_TABLE.end())
+        // if(TOKEN_OPERATOR_BINARY_TYPE_TABLE.find(tok->data) == TOKEN_OPERATOR_BINARY_TYPE_TABLE.end())
+        // {
+        //     errorHandler(ParserError("No such operator found!"));
+        //     return TokenDigesterReturn_t(nullptr, 1);
+        // }
+        // auto opProfile = TOKEN_OPERATOR_BINARY_TYPE_TABLE[tok->data];
+        // // std::cout<<tok->data;
+        // // fflush(stdout);
+        // auto [logic, info, asso, pres] = opProfile;
+        // if(info == 0)
+        // {
+        //     errorHandler(ParserError("No such operator found!"));
+        //     return TokenDigesterReturn_t(nullptr, 1);
+        // }
+        if(OPERATOR_BINARY_CLASS_TABLE.find(tok->data) == OPERATOR_BINARY_CLASS_TABLE.end())
         {
-            errorHandler(ParserError("No such operator found!"));
-            return TokenDigesterReturn_t(nullptr, 1);
+            errorHandler(NotImplementedError("Operator " + tok->data));
         }
-        auto opProfile = TOKEN_OPERATOR_BINARY_TYPE_TABLE[tok->data];
-        // std::cout<<tok->data;
-        // fflush(stdout);
-        auto [logic, info, asso, pres] = opProfile;
-        if(info == 0)
-        {
-            errorHandler(ParserError("No such operator found!"));
-            return TokenDigesterReturn_t(nullptr, 1);
-        }
-        auto node = new BinaryOperatorTreeNode(info, tok->data, logic, pres, asso);
-        // std::cout<<"GENERATED";
-        // fflush(stdout);
+        auto node = OPERATOR_BINARY_CLASS_TABLE[tok->data]();
         return TokenDigesterReturn_t(node, 1);
     }
 }

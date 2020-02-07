@@ -169,7 +169,7 @@ public:
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
+
         grabsToken.giveBack((VariableTreeNode *)ptr);
     }
 
@@ -443,12 +443,12 @@ public:
         {
             return elements[0]->execute(context);
         }
-        else 
+        else
         {
             // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
-            for(int i = 0; i < elements.size(); i++)
+            for (int i = 0; i < elements.size(); i++)
             {
-                elements[i] = elements[i]->execute(context);//->execute(context);
+                elements[i] = elements[i]->execute(context); //->execute(context);
             }
             // return tuple;
         }
@@ -490,31 +490,45 @@ public:
     }
 };
 
-class ConstantTreeNode : public TokenTree
+class MemHolderTreeNode : public TokenTree 
 {
-    MemoryWrapper *obj;
-    static Grabs<ConstantTreeNode> grabsToken;
-
 public:
-    // These hold Raw Scalar Data!
-    ConstantTreeNode(MemoryWrapper *obj, std::string name = "tmp") : TokenTree(TokenTreeType::CONSTANT, TokenTreeUseType::STATIC, "const_" + name), obj(obj)
+    MemHolderTreeNode(TokenTreeType type, TokenTreeUseType useType, std::string name) :
+    TokenTree(type, useType, name)
     {
+
     }
 
-    ConstantTreeNode(MemoryWrapper &obj, std::string name = "tmp") : TokenTree(TokenTreeType::CONSTANT, TokenTreeUseType::STATIC, "const_" + name), obj(&obj)
+    virtual bool booleanValue() = 0;
+
+    virtual MemHolderTreeNode* operator + (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
+    virtual MemHolderTreeNode* operator * (MemHolderTreeNode* obj) = 0;
+};
+
+
+template <typename memObj>
+class ConstantTreeNode : public MemHolderTreeNode
+{
+    memObj obj;
+    static inline Grabs<ConstantTreeNode<memObj>> grabsToken = Grabs<ConstantTreeNode<memObj>>("consTreeNodes");
+
+public:
+
+    ConstantTreeNode(memObj &obj, std::string name = "tmp") : MemHolderTreeNode(TokenTreeType::CONSTANT, TokenTreeUseType::STATIC, "const_" + name), obj(obj)
     {
     }
 
     void *operator new(std::size_t size)
     {
-        ConstantTreeNode *tok = grabsToken.grab();
+        ConstantTreeNode<memObj> *tok = grabsToken.grab();
         return tok;
     }
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
-        grabsToken.giveBack((ConstantTreeNode *)ptr);
+        grabsToken.giveBack((ConstantTreeNode<memObj> *)ptr);
     }
 
     auto getObject()
@@ -524,7 +538,8 @@ public:
 
     bool booleanValue()
     {
-        auto val = obj->getBooleanValue();
+        // auto val = obj->getBooleanValue();
+        auto val = bool(obj);
         if (val)
             std::cout << "\nTrue\n";
         else
@@ -534,13 +549,37 @@ public:
 
     virtual std::string stringRepresentation()
     {
-        return obj->getResultString();
+        return (std::string)(obj);//->getResultString();
     }
 
     TokenTree *execute(variableContext_t context)
     {
         // Execution logic
         return this;
+    }
+
+    MemHolderTreeNode* operator +(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj + ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator -(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj - ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator /(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj / ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
+    }
+
+    MemHolderTreeNode* operator *(MemHolderTreeNode* right)
+    {
+        memObj result = this->obj * ((ConstantTreeNode<memObj>*)right)->obj;
+        return new ConstantTreeNode<memObj>(result, std::string(result));
     }
 };
 
@@ -601,7 +640,8 @@ public:
 
 class FunctionTreeNode : public TokenTree
 {
-    TupleTreeNode* tmpParams;
+    TupleTreeNode *tmpParams;
+
 protected:
     // A Function is a collection of several TokenTrees
     variableContext_t tmp_context;
@@ -645,7 +685,7 @@ public:
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
+
         grabsToken.giveBack((FunctionTreeNode *)ptr);
     }
 
@@ -686,11 +726,6 @@ public:
             return this;
         // return this;
     }
-
-    // virtual TokenTree* execute(variableContext_t context)
-    // {
-    //     return this->block.execute(context);
-    // }
 };
 
 class LambdaTreeNode : public FunctionTreeNode
@@ -711,7 +746,7 @@ public:
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
+
         grabsToken.giveBack((LambdaTreeNode *)ptr);
     }
 
@@ -747,6 +782,7 @@ protected:
     std::vector<TupleTreeNode *> params;
     std::vector<CodeBlock *> blocks;
     static Grabs<ConditionalTreeNode> grabsToken;
+
 public:
     ConditionalTreeNode(std::vector<TupleTreeNode *> params, std::vector<CodeBlock *> blocks) : TokenTree(TokenTreeType::CONDITIONAL, TokenTreeUseType::DYNAMIC, "conditional"), params(params), blocks(blocks)
     {
@@ -765,7 +801,7 @@ public:
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
+
         grabsToken.giveBack((ConditionalTreeNode *)ptr);
     }
 
@@ -781,7 +817,7 @@ public:
                 auto tok = params[i]->get(j)->execute(context);
                 if (tok->getType() == TokenTreeType::CONSTANT)
                 {
-                    if (((ConstantTreeNode *)tok)->booleanValue() == false)
+                    if (((MemHolderTreeNode *)tok)->booleanValue() == false)
                     {
                         flag = 0;
                         break;
@@ -795,7 +831,7 @@ public:
             }
             if (flag)
             {
-                printf("\nGot a block to solve!\n");
+                // printf("\nGot a block to solve!\n");
                 // Execute the First 'True' param's corresponding block
                 blocks[i]->solve(context);
                 return blocks[i]->execute(context);
@@ -837,7 +873,7 @@ public:
 
     void operator delete(void *ptr)
     {
-        std::cout << "Custom delete!";
+
         grabsToken.giveBack((LoopTreeNode *)ptr);
     }
 
@@ -867,10 +903,10 @@ public:
             for (int j = 0; j < params.getSize(); j++)
             {
                 auto tok = params.get(j)->execute(context);
-                std::cout<<"\n>>>>> " << tok->stringRepresentation() << "=>"<<params.get(j)->stringRepresentation()<<"\n";
+                std::cout << "\n>>>>> " << tok->stringRepresentation() << "=>" << params.get(j)->stringRepresentation() << "\n";
                 if (tok->getType() == TokenTreeType::CONSTANT)
                 {
-                    if (((ConstantTreeNode *)tok)->booleanValue() == false)
+                    if (((MemHolderTreeNode *)tok)->booleanValue() == false)
                     {
                         flag = 0;
                         break;

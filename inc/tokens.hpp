@@ -38,7 +38,6 @@ public:
 
     void operator delete(void* ptr)
     {
-        std::cout<<"Custom delete!";
         grabsToken.giveBack((Token*)ptr);
     }
 };
@@ -47,7 +46,7 @@ typedef std::function<Token *(Token *, Token *)> Operator;
 
 #include "library/trie.hpp"
 
-extern TrieNode<MemoryWrapper> *GLOBAL_TRIE_STRUCTURE;
+// extern TrieNode<MemoryWrapper> *GLOBAL_TRIE_STRUCTURE;
 // std::vector<TokenTree *> genTreeNodeList(std::vector<Token *> list);
 Token *getToken(TokenType type, char *op, int len);
 std::vector<Token *> genTokenList(std::string str);

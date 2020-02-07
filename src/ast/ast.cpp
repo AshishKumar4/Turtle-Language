@@ -22,7 +22,7 @@ VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t context
     std::cout << context.size();
     for (int i = context.size() - 1; i >= 0; i--)
     {
-        std::cout << "\nTRYING";
+        // std::cout << "\nTRYING";
         try
         {
             auto currContext = (*context[i]);
@@ -31,13 +31,11 @@ VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t context
             if (currContext.find(tok->getName()) != currContext.end())
             {
                 VariableTreeNode *var = (currContext[tok->getName()]);
-                printf("<=>");
                 if (strict && var->getStoreType() == TokenTreeType::UNKNOWN)
                 {
-                    printf("HERE");
                     continue;
                 }
-                std::cout << " FOUND " << var->stringRepresentation();
+                // std::cout << " FOUND " << var->stringRepresentation();
                 return var;
             }
         }
@@ -196,7 +194,7 @@ TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t
         // tok = solveVariablePlaceHolder(tok);
         while (tok != nullptr)
         {
-            std::cout << "==>" << tok->stringRepresentation();
+            // std::cout << "==>" << tok->stringRepresentation();
             fflush(stdout);
             temp = tok->execute(context);
 
@@ -366,7 +364,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
         {
             // std::cout << "We are here!";
             // fflush(stdout);
-            std::cout << " -->> " << outQueue.size();
+            // std::cout << " -->> " << outQueue.size();
             transferOpToOutQueue(opstack, outQueue);
             // outQueue.push_back(opstack.back());
             // opstack.pop_back();

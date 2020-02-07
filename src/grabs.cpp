@@ -18,7 +18,7 @@ namespace turtle
 
 Grabs<Token> Token::grabsToken("tokens");
 Grabs<TokenTree> TokenTree::grabsToken("tokenTreeNodes");
-Grabs<ConstantTreeNode> ConstantTreeNode::grabsToken("constTreeNodes");
+
 Grabs<VariableTreeNode> VariableTreeNode::grabsToken("varTreeNodes");
 Grabs<ReturnTreeNode> ReturnTreeNode::grabsToken("returnTreeNodes");
 Grabs<FunctionTreeNode> FunctionTreeNode::grabsToken("funcTreeNodes");

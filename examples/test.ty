@@ -15,11 +15,11 @@ wow = lambda (x) { x("THIS WORKS!") };
 
 sum = 0;
 
-i = 10;
+i = 100000;
 
 while (i)
 {
-    sum = sum + i;
+    sum = sum + i*2 + 5;
     i = i - 1;
 };
 

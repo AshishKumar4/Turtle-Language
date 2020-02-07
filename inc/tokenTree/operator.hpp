@@ -132,14 +132,14 @@ public:
 
 class BinaryOperatorTreeNode : public OperatorTreeNode
 {
+    // OperatorBinaryLogic logic;
+    static Grabs<BinaryOperatorTreeNode> grabsToken;
+protected:
     TokenTree *left;
     TokenTree *right;
-    OperatorBinaryLogic logic;
-
-    static Grabs<BinaryOperatorTreeNode> grabsToken;
 
 public:
-    BinaryOperatorTreeNode(OperatorInfo type, std::string symbol, OperatorBinaryLogic logic, OperatorPrecedence precedence = 0, OperatorAssociativity associativity = OperatorAssociativity::LEFT, TokenTree *left = nullptr, TokenTree *right = nullptr) : OperatorTreeNode(type, symbol, precedence, associativity), left(left), right(right), logic(logic)
+    BinaryOperatorTreeNode(OperatorInfo type, std::string symbol, OperatorPrecedence precedence = 0, OperatorAssociativity associativity = OperatorAssociativity::LEFT, TokenTree *left = nullptr, TokenTree *right = nullptr) : OperatorTreeNode(type, symbol, precedence, associativity), left(left), right(right)
     {
     }
 
@@ -166,35 +166,29 @@ public:
         grabsToken.giveBack((BinaryOperatorTreeNode *)ptr);
     }
 
-    // TokenTree *execute()
-    // {
-    //     // std::cout << "Trying to execute!";
-    //     std::cout << "\n->{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
-    //     fflush(stdout);
-    //     if (left != nullptr && right != nullptr && left->getType() != TokenTreeType::OPERATOR && right->getType() != TokenTreeType::OPERATOR && !checkIfUnknown(left) && !checkIfUnknownVar(right))
-    //     {
-    //         auto val = logic(left, right);
-    //         if (val != nullptr)
-    //         {
-    //             this->result = val;
-    //             return val;
-    //         }
-    //     }
-    //     return this;
-    // }
-
-    TokenTree *execute(variableContext_t context)
+    virtual MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right) 
     {
-        // std::cout << "Trying to execute!";
-        // std::cout << "\n->r{" << left->getName() << " " << this->getName() << " " << right->getName() << "}";
-        std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
-        fflush(stdout);
+        return nullptr;
+    }
+
+    virtual TokenTree* logic(TokenTree* left, TokenTree* right)
+    {
+        if(left->getType() != TokenTreeType::CONSTANT && right->getType() != TokenTreeType::CONSTANT)
+        {
+            // errorHandler(NotImplementedError("Logic for non constant values"));
+            nullptr;
+        }
+        return logic_internal((MemHolderTreeNode*)left, (MemHolderTreeNode*)right);
+    }
+
+    virtual TokenTree *execute(variableContext_t context)
+    {
+        // std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
+        // fflush(stdout);
         auto l = left;
         auto r = right;
 
         if (l != nullptr && r != nullptr
-            //  && l->getType() != TokenTreeType::OPERATOR
-            //  && r->getType() != TokenTreeType::OPERATOR
             && !checkIfUnknown(l) && !checkIfUnknownVar(r))
         {
             r = r->execute(context);
@@ -202,59 +196,137 @@ public:
             {
                 l = l->execute(context);
             }
-            std::cout << "\n---->r[" << l->stringRepresentation() << "_" << this->getName() << "_" << r->stringRepresentation() << "]";
-            auto val = logic(l, r);
+
+            // std::cout << "\n---->r[" << l->stringRepresentation() << "_" << this->getName() << "_" << r->stringRepresentation() << "]";
+            auto val = (this->logic(l, r));
             if (val != nullptr)
             {
                 this->result = val;
-                return val;
+                return this->result;
             }
         }
         // std::cout << "\n->r[" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "]";
         return this;
     }
 
-    // TokenTree *executeRecursive()
-    // {
-    //     std::cout << "\n->r{" << left->stringRepresentation() << "_" << this->getName() << "_" << right->stringRepresentation() << "}";
-    //     fflush(stdout);
-    //     auto l = left;
-    //     auto r = right;
-    //     if (l != nullptr && r != nullptr && !checkIfUnknown(l) && !checkIfUnknown(r))
-    //     {
-    //         if (!(this->opType & (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE))
-    //         {
-    //             l = solveVariablePlaceHolder(l);
-    //             r = solveVariablePlaceHolder(r);
-
-    //             // Now also solve for future literals and other fancy stuffs
-    //             l = l->execute();
-    //             r = r->execute();
-    //         }
-    //         if (r->getType() == TokenTreeType::OPERATOR)
-    //         {
-    //             r = ((OperatorTreeNode *)r)->executeRecursive();
-    //         }
-    //         if (l->getType() == TokenTreeType::OPERATOR)
-    //         {
-    //             l = ((OperatorTreeNode *)l)->executeRecursive();
-    //         }
-    //         auto val = logic(l, r);
-    //         if (val != nullptr)
-    //         {
-    //             std::cout << " [solved]=>" << val->stringRepresentation();
-    //             this->result = val;
-    //             return val;
-    //         }
-    //     }
-    //     return this;
-    // }
-
     std::string stringRepresentation()
     {
         if (left != nullptr && right != nullptr)
             return "{{" + left->stringRepresentation() + " " + this->getName() + " " + right->stringRepresentation() + "}}";
         return this->getName();
+    }
+};
+
+class BinaryAdditionOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryAdditionOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), "+", 6, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        auto result = *left + right;
+        return result;
+    }
+};
+
+class BinarySubtractionOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinarySubtractionOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), "-", 6, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        auto result = *left - right;
+        return result;
+    }
+};
+
+class BinaryMultiplicationOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryMultiplicationOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), "*", 5, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        auto result = *left * right;
+        return result;
+    }
+};
+
+class BinaryDivisionOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryDivisionOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), "/", 5, OperatorAssociativity::LEFT)
+    {
+
+    }
+    
+    MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+    {
+        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
+        auto result = *left / right;
+        // std::cout<<" "<<result->stringRepresentation() << std::endl;
+        return result;
+    }
+};
+
+class BinaryEqualOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinaryEqualOperatorTreeNode(TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC | (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE), "=", 16, OperatorAssociativity::RIGHT)
+    {
+
+    }
+
+    TokenTree* logic(TokenTree* left, TokenTree* right)
+    {
+        switch(left->getType())
+        {
+            case TokenTreeType::VARIABLE:
+            {
+                *((VariableTreeNode *)left) = right;
+                return left;
+                break;
+            }
+            case TokenTreeType::TUPLE:
+            {
+                auto tup = (TupleTreeNode *)left;
+                *tup = (TupleTreeNode *)right;
+                return tup;
+                break;
+            }
+        }
+        errorHandler(NotImplementedError("Support for equation of such types"));
+        return nullptr;
+    }
+};
+
+class BinarySeperatorOperatorTreeNode : public BinaryOperatorTreeNode
+{
+public:
+    BinarySeperatorOperatorTreeNode(std::string symbol, TokenTree *left = nullptr, TokenTree *right = nullptr) : 
+    BinaryOperatorTreeNode(((OperatorInfo)OperatorType::BINARY ), symbol, 17, OperatorAssociativity::LEFT)
+    {
+
+    }
+
+    TokenTree* logic(TokenTree* left, TokenTree* right)
+    {
+        return nullptr;
     }
 };
 

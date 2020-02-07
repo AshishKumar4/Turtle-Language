@@ -28,7 +28,7 @@ public:
     {
         maxSize += newSize;
         auto tofill = maxSize - heap.size();
-        heap.resize(maxSize);
+        heap.reserve(maxSize);
         for(int i = 0; i < tofill; i++)
         {
             heap.push_back((T*)malloc(sizeof(T)));
@@ -37,7 +37,7 @@ public:
 
     auto grab()
     {
-        if(heap.size() == 1)
+        if(heap.size() <= 1)
         {
             resize(maxSize/2);
         }

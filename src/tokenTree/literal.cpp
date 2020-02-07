@@ -73,10 +73,10 @@ TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size) //
         default:
             base = 10;
         }
-        auto number = std::stoull(num, nullptr, base);
+        turtleInt number = (int64_t)std::stoull(num, nullptr, base);
         // std::cout<<"num["<<number<<"]";
-        Integer *intnum = new Integer((uint64_t)number, DataPassMode::COPY);
-        ConstantTreeNode *node = new ConstantTreeNode(intnum, num);
+        // Integer *intnum = new Integer((uint64_t)number, DataPassMode::COPY);
+        ConstantTreeNode<turtleInt> *node = new ConstantTreeNode<turtleInt>(number, num);
         return TokenDigesterReturn_t(node, 1);
     }
     catch (const std::exception &e)

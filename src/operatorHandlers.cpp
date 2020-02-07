@@ -44,10 +44,17 @@ TokenTree *operator_binaryTemplate(TokenTree *left, TokenTree *right)
 //     return nullptr;
 // }
 
-// TokenTree *operator_unarySubtraction(TokenTree *node)
-// {
-//     return nullptr;
-// }
+TokenTree *operator_unarySubtraction(TokenTree *node)
+{
+    switch (node->getType())
+    {
+        case TokenTreeType::CONSTANT:
+        {
+            
+        }
+    }
+    return nullptr;
+}
 
 bool isVariableUnknown(VariableTreeNode *left, VariableTreeNode *right)
 {
@@ -77,10 +84,11 @@ TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
             // Only constants can come over here as Variables got solved in the parser stage,
             // and Unknowns aren't allowed to get solved here.
             // Get MemoryWrapper objects
-            auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            auto result = ((*leftobj) + (*rightobj));
-            return new ConstantTreeNode(result, result->getResultString());
+            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
+            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
+            // auto result = (*(MemHolderTreeNode*)(left) + ((MemHolderTreeNode*)right));
+            // auto tok = ConstantTreeNode(result, result->getResultString());
+            // return result;//new ConstantTreeNode(result, result->getResultString());
             break;
         }
         case TokenTreeType::VARIABLE:
@@ -101,18 +109,16 @@ TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
 
 TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
 {
-    // left = solveVariablePlaceHolder(left);
-    // right = solveVariablePlaceHolder(right);
     if (left->getType() == right->getType())
     {
         switch (left->getType())
         {
         case TokenTreeType::CONSTANT:
         {
-            auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            auto result = (*leftobj) - ((*rightobj));
-            return new ConstantTreeNode(result, result->getResultString());
+            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
+            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
+            // auto result = (*leftobj) - ((*rightobj));
+            // return new ConstantTreeNode(result, result->getResultString());
             break;
         }
         case TokenTreeType::VARIABLE:
@@ -140,10 +146,10 @@ TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
         {
         case TokenTreeType::CONSTANT:
         {
-            auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            auto result = ((*leftobj) * (*rightobj));
-            return new ConstantTreeNode(result, result->getResultString());
+            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
+            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
+            // auto result = ((*leftobj) * (*rightobj));
+            // return new ConstantTreeNode(result, result->getResultString());
             break;
         }
         case TokenTreeType::VARIABLE:
@@ -171,10 +177,10 @@ TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
         {
         case TokenTreeType::CONSTANT:
         {
-            auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            auto result = (*leftobj) / ((*rightobj));
-            return new ConstantTreeNode(result, result->getResultString());
+            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
+            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
+            // auto result = (*leftobj) / ((*rightobj));
+            // return new ConstantTreeNode(result, result->getResultString());
             break;
         }
         case TokenTreeType::VARIABLE:

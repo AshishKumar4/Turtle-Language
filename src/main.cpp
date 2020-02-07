@@ -46,22 +46,13 @@ auto interpreter(std::string input)
             auto ast = turtle::simpleASTmaker(std::vector<turtle::TokenTree *>(&nodes[tmpIndex], &nodes[i]), turtle::GLOBAL_CONTEXT, true);
             std::cout<<std::endl;
             // asts.push_back(ast);
+            // node = ast->execute(turtle::GLOBAL_CONTEXT);
             node = symbolicASTexecutor({ast}, turtle::GLOBAL_CONTEXT);
             tmpIndex = i + 1;
         }
         ++i;
     }
     
-    // for(auto ast: asts)
-    // {
-    //     node = symbolicASTexecutor({ast}, turtle::GLOBAL_CONTEXT);
-    // }
-    // node = symbolicASTexecutor(asts, turtle::GLOBAL_CONTEXT);
-    // auto ast = turtle::simpleASTmaker(toks, turtle::GLOBAL_CONTEXT, true);
-    // Solve the ast -->
-    // auto node = ast;//[0];
-    // auto node = symbolicASTexecutor({ast}, turtle::GLOBAL_CONTEXT);
-    // std::cout << std::endl << ast->stringRepresentation();
     return node->stringRepresentation();
 }
 

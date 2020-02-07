@@ -37,9 +37,9 @@ extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int 
 void CodeBlock::solve(variableContext_t context)
 {
     context.push_back(localContext);
-    std::cout << "\nSOLVING_BLOCK";
+    // std::cout << "\nSOLVING_BLOCK";
     this->statements = sanitizeSequences(this->statements, context, ";", false, false);
-    std::cout << "\nBLOCK_SOLVED";
+    // std::cout << "\nBLOCK_SOLVED";
     is_solved = true;
 }
 
@@ -67,7 +67,7 @@ void TupleTreeNode::solve(variableContext_t context)
 
 void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t context)
 {
-    std::cout << "\nSET PARAMETERS\n";
+    // std::cout << "\nSET PARAMETERS\n";
     fflush(stdout);
     if (!paramVals->isSolved())
     {
@@ -95,8 +95,9 @@ TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size) //
 {
     auto tok = list[index];
     std::cout << "str[" << tok->data << "]";
-    StrConst *str = new StrConst(tok->data);
-    ConstantTreeNode *node = new ConstantTreeNode(str, tok->data);
+    // StrConst *str = new StrConst(std::string(tok->data.begin()+1, tok->data.end()-1));
+    auto turtlestr = turtleString(tok->data);
+    ConstantTreeNode<turtleString> *node = new ConstantTreeNode<turtleString>(turtlestr, tok->data);
     return TokenDigesterReturn_t(node, 1);
 }
 
@@ -126,6 +127,12 @@ std::vector<TokenTree *> genTokenStack(std::string str)
     {
         std::vector<Token *> list = genTokenList(str);
         auto treelist = genTreeNodeList(list);
+
+        // Lets clear up some memory
+        for(auto i : list)
+        {
+            delete i;
+        }
         return treelist;
     }
     catch (std::exception &e)
