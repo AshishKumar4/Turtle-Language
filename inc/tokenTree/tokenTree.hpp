@@ -474,90 +474,6 @@ public:
     }
 };
 
-class ListTreeNode : public TokenTree
-{
-    std::vector<TokenTree *> nodes;
-
-public:
-    ListTreeNode(std::vector<TokenTree *> nodes) : TokenTree(TokenTreeType::LIST, TokenTreeUseType::DYNAMIC, "list" + std::to_string(nodes.size())), nodes(nodes)
-    {
-        // errorHandler("Lists Not Implemented!");
-    }
-
-    void set(std::vector<TokenTree *> target)
-    {
-        set(&target[0]);
-    }
-
-    void set(TokenTree **target)
-    {
-        // Length of target array SHOULD ALWAYS be equal to length of elements array
-        try
-        {
-            for (int i = 0; i < nodes.size(); i++)
-            {
-                nodes[i] = target[i];
-            }
-        }
-        catch (...)
-        {
-            std::cerr << "Error in setting function elements to target!";
-            exit(0);
-        }
-    }
-
-    std::vector<TokenTree *> get()
-    {
-        return nodes;
-    }
-
-    TokenTree *get(int index)
-    {
-        return nodes[index];
-    }
-
-    virtual std::string stringRepresentation()
-    {
-        std::string val = "[";
-        for (auto i : nodes)
-        {
-            val += i->stringRepresentation() + ",";
-        }
-        return val + "]";
-    }
-
-    virtual TokenTree *execute(variableContext_t context)
-    {
-        // Execution logic
-        if (nodes.size() == 1)
-        {
-            return nodes[0]->execute(context);
-        }
-        else
-        {
-            // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
-            for (int i = 0; i < nodes.size(); i++)
-            {
-                nodes[i] = nodes[i]->execute(context); //->execute(context);
-            }
-            // return tuple;
-        }
-        return this;
-    }
-
-    auto size()
-    {
-        return nodes.size();
-    }
-
-    void push_back(TokenTree* node)
-    {
-        nodes.push_back(node);
-    }
-    
-    void solve(variableContext_t context);
-};
-
 class MemHolderTreeNode : public TokenTree 
 {
 public:
@@ -662,6 +578,109 @@ public:
         // Execution logic
         return this;
     }
+};
+
+class ListTreeNode : public TokenTree
+{
+    std::vector<TokenTree *> nodes;
+
+public:
+    ListTreeNode(std::vector<TokenTree *> nodes) : TokenTree(TokenTreeType::LIST, TokenTreeUseType::DYNAMIC, "list" + std::to_string(nodes.size())), nodes(nodes)
+    {
+        // errorHandler("Lists Not Implemented!");
+    }
+
+    void set(std::vector<TokenTree *> target)
+    {
+        set(&target[0]);
+    }
+
+    void set(TokenTree **target)
+    {
+        // Length of target array SHOULD ALWAYS be equal to length of elements array
+        try
+        {
+            for (int i = 0; i < nodes.size(); i++)
+            {
+                nodes[i] = target[i];
+            }
+        }
+        catch (...)
+        {
+            std::cerr << "Error in setting function elements to target!";
+            exit(0);
+        }
+    }
+
+    std::vector<TokenTree *> get()
+    {
+        return nodes;
+    }
+
+    std::vector<TokenTree *> get(std::vector<TokenTree *> indexes)
+    {
+        std::vector <TokenTree*>    val; 
+        for(auto i: indexes)
+        {
+            // Indexing shouldn't work if every index isn't an Int Type Constant
+            if(i->getType() == TokenTreeType::CONSTANT)
+            {
+                if(static_cast<ConstantTreeNode<turtleInt>*>(i)->getType() == turtleObjectType::INT)
+                {
+                    val.push_back(nodes[(int)(turtleInt)*static_cast<ConstantTreeNode<turtleInt>*>(i)]);
+                    continue;
+                }
+            }
+            errorHandler(SymanticError("Wrong type of elements provided as indexes!"));
+        }
+        return val;
+    }
+
+    TokenTree *get(int index)
+    {
+        return nodes[index];
+    }
+
+    virtual std::string stringRepresentation()
+    {
+        std::string val = "[";
+        for (auto i : nodes)
+        {
+            val += i->stringRepresentation() + ",";
+        }
+        return val + "]";
+    }
+
+    virtual TokenTree *execute(variableContext_t context)
+    {
+        // Execution logic
+        if (nodes.size() == 1)
+        {
+            return nodes[0]->execute(context);
+        }
+        else
+        {
+            // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
+            for (int i = 0; i < nodes.size(); i++)
+            {
+                nodes[i] = nodes[i]->execute(context); //->execute(context);
+            }
+            // return tuple;
+        }
+        return this;
+    }
+
+    auto size()
+    {
+        return nodes.size();
+    }
+
+    void push_back(TokenTree* node)
+    {
+        nodes.push_back(node);
+    }
+
+    void solve(variableContext_t context);
 };
 
 class CodeBlock : public TokenTree

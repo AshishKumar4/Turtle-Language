@@ -2,7 +2,7 @@ a = 10;
 
 define test(a,b) 
 { 
-    a * 4 + b 
+    a * 4 + b;
 };
 
 define new(a,b) 

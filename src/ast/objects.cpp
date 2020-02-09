@@ -134,11 +134,29 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
             errorHandler(NotImplementedError(list[0]->getName() + " kind of loops!"));
         }
         break;
+    case TokenTreeType::LIST:
+    {
+        std::cout << "\nLIST INDEXING:";
+        node = list[0];
+        std::cout << node->getName();
+        if (node->getType() == TokenTreeType::VARIABLE)
+        {
+            node = contextSolver((VariableTreeNode *)node, context, true);
+            node = node->execute(context);
+        }
+        if(node->getType() != TokenTreeType::LIST)
+        {
+            errorHandler(SymanticError("Array Indexing used on Non Array object"));
+        }
+        ((ListTreeNode*)list[1])->solve(context);
+        node = new ListTreeNode(((ListTreeNode*)node)->get(((ListTreeNode*)list[1])->get()));
+        break;
+    }
     case TokenTreeType::DUMMY:
-        errorHandler(SyntacticError("You cannot use " + list[0]->getName() + " like this!"));
+        errorHandler(SymanticError("You cannot use " + list[0]->getName() + " like this!"));
         break;
     default:
-        errorHandler(SyntacticError("Not implemented!"));
+        errorHandler(NotImplementedError("Not implemented!"));
     }
     for (auto i : list)
     {
@@ -176,6 +194,16 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
             continue;
         case TokenTreeType::TUPLE:
             if (list[finger]->getType() == TokenTreeType::TUPLE && (((TupleLiteralConstraint *)j)->getSize() <= 0 || ((TupleLiteralConstraint *)j)->getSize() == ((TupleTreeNode *)list[finger])->getSize()))
+            {
+                // Constraint met!
+                ++finger;
+                ++counter;
+                continue;
+            }
+            // std::cerr<< "[tuple condition not met "<< ((TupleLiteralConstraint *)j)->getSize() << " , " << ((TupleTreeNode *)list[finger])->getSize();
+            break;
+        case TokenTreeType::LIST:
+            if (list[finger]->getType() == TokenTreeType::LIST)// && (((ListTreeNode *)j)->size() <= 0 || ((ListTreeNode *)j)->getSize() == ((ListTreeNode *)list[finger])->getSize()))
             {
                 // Constraint met!
                 ++finger;
