@@ -1,134 +1,100 @@
-#pragma once 
+#pragma once
 #include "stdint.h"
 #include "stdlib.h"
 #include "string.h"
 #include "iostream"
 #include "exception"
+#include "functional"
 
 #include "library/common.hpp"
 
 namespace turtle
 {
 
-struct turtleString 
+enum class turtleObjectType
 {
+    STRING,
+    INT,
+    FLOAT,
+    num
+};
+
+struct turtleObject
+{
+public:
+    turtleObjectType type;
+    turtleObject(turtleObjectType type) : type(type)
+    {
+
+    }
+    virtual ~turtleObject() = default;
+};
+
+struct turtleString : public turtleObject
+{
+public:
     std::string str;
 
-    turtleString(std::string str) :
-    str(str)
+    turtleString(std::string str) : str(str), turtleObject(turtleObjectType::STRING)
     {
     }
 
-    turtleString(int num) : 
-    str(std::to_string(num))
-    {
-
-    }
-
-    operator std::string() 
+    operator std::string()
     {
         return str;
     }
 
-    operator bool() 
+    operator bool()
     {
-        std::cout<<"\n]]]>>>>>"<<str<<std::endl;
-        if("" == str)
+        std::cout << "\n]]]>>>>>" << str << std::endl;
+        if ("" == str)
             return false;
         return true;
     }
 
-    turtleString operator + (turtleString &obj)
+    turtleString operator+(turtleString &obj)
     {
         return (std::string)str + (std::string)obj;
     }
+};
 
-    turtleString operator - (turtleString &obj)
+struct turtleFloat : public turtleObject
+{
+public:
+    double num;
+
+    turtleFloat(double num) : num(num), turtleObject(turtleObjectType::FLOAT)
     {
-        errorHandler(NotImplementedError("Subtraction of String types"));
-        return obj;
     }
 
-    turtleString operator * (turtleString &obj)
+    operator std::string()
     {
-        errorHandler(NotImplementedError("Multiplication of String types"));
-        return obj;
+        return std::to_string((double)num);
     }
 
-    turtleString operator / (turtleString &obj)
+    operator double()
     {
-        errorHandler(NotImplementedError("Division of String types"));
-        return obj;
+        return num;
     }
 
-    turtleString operator < (turtleString &obj)
+    turtleFloat operator%(turtleFloat obj)
     {
-        // errorHandler(NotImplementedError("Division of String types"));
-        return (std::string)str < (std::string)obj;
-    }
-
-    turtleString operator > (turtleString &obj)
-    {
-        // errorHandler(NotImplementedError("Division of String types"));
-        return (std::string)str > (std::string)obj;
-    }
-
-    turtleString operator == (turtleString &obj)
-    {
-        // errorHandler(NotImplementedError("Division of String types"));
-        return (std::string)str == (std::string)obj;
-    }
-
-    turtleString operator <= (turtleString &obj)
-    {
-        // errorHandler(NotImplementedError("Division of String types"));
-        return (std::string)str <= (std::string)obj;
-    }
-
-    turtleString operator >= (turtleString &obj)
-    {
-        // errorHandler(NotImplementedError("Division of String types"));
-        return (std::string)str >= (std::string)obj;
-    } 
-    
-    turtleString operator % (turtleString &obj)
-    {
-        errorHandler(NotImplementedError("Modulo of String types"));
+        errorHandler(NotImplementedError("Modulo of Float types"));
         // return (std::string)str % (std::string)obj;
         return obj;
     }
 };
 
-struct turtleFloat
+struct turtleInt : public turtleObject
 {
-    float num;
-
-    turtleFloat(float num) :
-    num(num)
-    {
-    }
-
-    operator std::string() 
-    {
-        return std::to_string((float)num);
-    }
-
-    operator float()
-    {
-        return num;
-    }
-};
-
-struct turtleInt
-{
+public:
     int64_t num;
 
-    turtleInt(int64_t num) :
-    num(num)
+    turtleInt(int64_t num) : num(num), turtleObject(turtleObjectType::INT)
     {
     }
 
-    operator std::string() 
+    operator std::string()
     {
         return std::to_string((int64_t)num);
     }
@@ -138,5 +104,4 @@ struct turtleInt
         return num;
     }
 };
-
-}
+} // namespace turtle

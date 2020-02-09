@@ -11,7 +11,7 @@ std::map<DerivativeType, TokenType>           TOKEN_TYPE_TABLE;
 
 std::string VALID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
 std::string VALID_NUMBERS = "1234567890";
-std::string OPERATOR_CHARACTERS = "<>!@#$%^&*~+|:?,./;\\`-=";
+std::string OPERATOR_CHARACTERS = "<>!@#$%^&*~+|:?,/;\\`-=";
 std::string BRACKETS = "[]{}()";
 
 void init_rulesTable()
@@ -27,7 +27,7 @@ void init_rulesTable()
                             -1, 
                             DERV_TYPE_WHITESPACE | DERV_TYPE_OPERATOR | DERV_TYPE_BRACKET, // | DERV_TYPE_SINGLEQUOTE | DERV_TYPE_DOUBLEQUOTE,
                             DERV_TYPE_WHITESPACE | DERV_TYPE_OPERATOR | DERV_TYPE_BRACKET | DERV_TYPE_SINGLEQUOTE | DERV_TYPE_DOUBLEQUOTE,
-                            DERV_TYPE_LETTER | DERV_TYPE_NUMBER
+                            DERV_TYPE_LETTER | DERV_TYPE_NUMBER | DERV_TYPE_INFER
                             );
     
     auto rule_operator = new TokenRules(TokenType::OPERATOR, DERV_TYPE_OPERATOR,

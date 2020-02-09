@@ -133,6 +133,15 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t context, bo
             ++i;
             break;
         }
+        case TokenTreeType::LIST:
+        {
+            // A lone tuple, Solve it!
+            auto tmp = (ListTreeNode *)tlist[i];
+            tmp->solve(context);
+            treelist.push_back(tmp);
+            ++i;
+            break;
+        }
         case TokenTreeType::TEMP_LITERAL_WRAPPER:
         {
             auto tmp = (TempLiteralWrapperNode *)tlist[i];

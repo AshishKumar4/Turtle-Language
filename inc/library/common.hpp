@@ -27,7 +27,13 @@ public:
 class SyntacticError : public TurtleError
 {   
 public:
-    SyntacticError(std::string error): TurtleError(error, "SymanticError") {}
+    SyntacticError(std::string error): TurtleError(error, "SyntacticError") {}
+};
+
+class SymanticError : public TurtleError
+{   
+public:
+    SymanticError(std::string error): TurtleError(error, "SymanticError") {}
 };
 
 class NotImplementedError : public TurtleError

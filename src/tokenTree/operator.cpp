@@ -71,52 +71,52 @@ void init_operatorTypeTable()
     OPERATOR_BINARY_CLASS_TABLE[","] = &createBinaryCommaOperator;
     OPERATOR_BINARY_CLASS_TABLE[";"] = &createBinarySemicolonOperator;
 
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["++"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["--"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["++"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["--"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 2);
 
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["+"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 3);
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["-"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 3);
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["~"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 3);
-    TOKEN_OPERATOR_UNARY_TYPE_TABLE["!"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 3);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["+"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 3);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["-"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 3);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["~"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 3);
+    // TOKEN_OPERATOR_UNARY_TYPE_TABLE["!"] = OperatorUnaryProfile(operator_unaryTemplate, ((OperatorInfo)OperatorType::UNARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 3);
 
-    // Binary Operators -->
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["**"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 3);
+    // // Binary Operators -->
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["**"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 3);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["*"] = OperatorBinaryProfile(operator_binaryMultiplication, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["/"] = OperatorBinaryProfile(operator_binaryDivision, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["%"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["*"] = OperatorBinaryProfile(operator_binaryMultiplication, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["/"] = OperatorBinaryProfile(operator_binaryDivision, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["%"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 5);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["+"] = OperatorBinaryProfile(operator_binaryAddition, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["-"] = OperatorBinaryProfile(operator_binarySubtraction, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
-    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["&"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["+"] = OperatorBinaryProfile(operator_binaryAddition, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["-"] = OperatorBinaryProfile(operator_binarySubtraction, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
+    // // TOKEN_OPERATOR_BINARY_TYPE_TABLE["&"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::LEFT, 6);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["<<"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 7);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE[">>"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 7);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["<<"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 7);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE[">>"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 7);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["<"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE[">"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["<="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE[">="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["<"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE[">"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["<="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE[">="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 9);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["=="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 10);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["!="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 10);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["=="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 10);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["!="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 10);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["^"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 12);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["|"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 13);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["&&"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 14);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["||"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 15);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["^"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 12);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["|"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::LEFT, 13);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["&&"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 14);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["||"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BOOLEAN), OperatorAssociativity::LEFT, 15);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["="] = OperatorBinaryProfile(operator_binaryEqual, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC | (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["+="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["-="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["*="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["/="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["|="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["&="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE["^="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["="] = OperatorBinaryProfile(operator_binaryEqual, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC | (OperatorInfo)OperatorType::CANNOT_SOLVE_VARIABLE), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["+="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["-="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["*="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["/="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::ARITHMATIC), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["|="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["&="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE["^="] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY | (OperatorInfo)OperatorType::BITWISE), OperatorAssociativity::RIGHT, 16);
 
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE[","] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
-    TOKEN_OPERATOR_BINARY_TYPE_TABLE[";"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE[","] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
+    // TOKEN_OPERATOR_BINARY_TYPE_TABLE[";"] = OperatorBinaryProfile(operator_binaryTemplate, ((OperatorInfo)OperatorType::BINARY), OperatorAssociativity::LEFT, 17);
 }
 
 TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size)//, variableContext_t context)

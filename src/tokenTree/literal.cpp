@@ -73,11 +73,31 @@ TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size) //
         default:
             base = 10;
         }
-        turtleInt number = (int64_t)std::stoull(num, nullptr, base);
-        // std::cout<<"num["<<number<<"]";
-        // Integer *intnum = new Integer((uint64_t)number, DataPassMode::COPY);
-        ConstantTreeNode<turtleInt> *node = new ConstantTreeNode<turtleInt>(number, num);
-        return TokenDigesterReturn_t(node, 1);
+        int dots = 0;
+        for (auto i : num)
+        {
+            if (i == '.')
+            {
+                // Its a Float!
+                ++dots;
+            }
+        }
+        if (dots == 0)
+        {
+            turtleInt number = (int64_t)std::stoull(num, nullptr, base);
+            ConstantTreeNode<turtleInt> *node = new ConstantTreeNode<turtleInt>(number, num);
+            return TokenDigesterReturn_t(node, 1);
+        }
+        else if (dots == 1)
+        {
+            turtleFloat number = (float)std::stof(num);
+            ConstantTreeNode<turtleFloat> *node = new ConstantTreeNode<turtleFloat>(number, num);
+            return TokenDigesterReturn_t(node, 1);
+        }
+        else
+        {
+            errorHandler(SyntacticError("Multiple 'dot' operators detected in a single number!"));
+        }
     }
     catch (const std::exception &e)
     {

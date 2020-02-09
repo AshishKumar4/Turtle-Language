@@ -44,6 +44,17 @@ typedef std::function<TokenTree *(TokenTree *, TokenTree *)> OperatorBinaryLogic
 typedef std::tuple<OperatorUnaryLogic, OperatorInfo, OperatorAssociativity, OperatorPrecedence> OperatorUnaryProfile;
 typedef std::tuple<OperatorBinaryLogic, OperatorInfo, OperatorAssociativity, OperatorPrecedence> OperatorBinaryProfile;
 
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_ADDITION_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_MULTIPLY_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_DIVIDE_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_MODULO_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_LESS_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_GREATER_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_EQUALS_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+extern std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+
 class OperatorTreeNode : public TokenTree
 {
     static Grabs<OperatorTreeNode> grabsToken;
@@ -173,12 +184,67 @@ public:
 
     virtual TokenTree* logic(TokenTree* left, TokenTree* right)
     {
-        if(left->getType() != TokenTreeType::CONSTANT && right->getType() != TokenTreeType::CONSTANT)
+        // if(left->getType() != TokenTreeType::CONSTANT && right->getType() != TokenTreeType::CONSTANT)
+        // {
+        //     // errorHandler(NotImplementedError("Logic for non constant values"));
+        //     nullptr;
+        // }
+        switch(left->getType())
         {
-            // errorHandler(NotImplementedError("Logic for non constant values"));
-            nullptr;
+            case TokenTreeType::CONSTANT:
+            {
+                switch(right->getType())
+                {
+                    case TokenTreeType::CONSTANT:
+                    {
+                        return logic_internal((MemHolderTreeNode*)left, (MemHolderTreeNode*)right);
+                    }
+                    case TokenTreeType::LIST:
+                    {
+                        ListTreeNode* r = (ListTreeNode*)right;
+                        ListTreeNode* newList = new ListTreeNode({});
+                        for(int i = 0; i < r->size(); i++)
+                        {
+                            newList->push_back(logic_internal((MemHolderTreeNode*)left, (MemHolderTreeNode*)r->get(i)));
+                        }
+                        return newList;
+                    }
+                }
+            }
+            case TokenTreeType::LIST:
+            {
+                switch(right->getType())
+                {
+                    case TokenTreeType::CONSTANT:
+                    {
+                        ListTreeNode* l = (ListTreeNode*)left;
+                        ListTreeNode* newList = new ListTreeNode({});
+                        for(int i = 0; i < l->size(); i++)
+                        {
+                            newList->push_back(logic_internal((MemHolderTreeNode*)l->get(i), (MemHolderTreeNode*)right));
+                        }
+                        return newList;
+                    }
+                    case TokenTreeType::LIST:
+                    {
+                        ListTreeNode* l = (ListTreeNode*)left;
+                        ListTreeNode* r = (ListTreeNode*)right;
+                        if(r->size() > l->size())
+                        {
+                            errorHandler(SyntacticError("Size of Left side list is smaller than right"));
+                            return nullptr;
+                        }
+                        ListTreeNode* newList = new ListTreeNode({});
+                        for(int i = 0; i < r->size(); i++)
+                        {
+                            newList->push_back(logic_internal((MemHolderTreeNode*)l->get(i), (MemHolderTreeNode*)r->get(i)));
+                        }
+                        return newList;
+                    }
+                }
+            }
         }
-        return logic_internal((MemHolderTreeNode*)left, (MemHolderTreeNode*)right);
+        return nullptr;
     }
 
     virtual TokenTree *execute(variableContext_t context)
@@ -216,7 +282,7 @@ public:
         return this->getName();
     }
 };
- 
+
 class BinaryAdditionOperatorTreeNode : public BinaryOperatorTreeNode
 {
 public:
@@ -228,8 +294,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        auto result = *left + right;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_ADDITION_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("Addition of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -244,8 +317,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        auto result = *left - right;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_SUBTRACTION_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("Addition of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -260,8 +340,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        auto result = *left * right;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_MULTIPLY_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("Multiplication of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -276,10 +363,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left / right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_DIVIDE_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("Division of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -294,10 +386,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left % right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_MODULO_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("Modulo of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -359,10 +456,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left < right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_LESS_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("LessThan of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -377,10 +479,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left > right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_GREATER_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("GreaterThan of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -395,10 +502,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left == right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_EQUALS_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("BooleanEquals of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -414,10 +526,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left <= right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_LESSEQUAL_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("LessThanEqual of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 
@@ -433,10 +550,15 @@ public:
     
     MemHolderTreeNode* logic_internal(MemHolderTreeNode* left, MemHolderTreeNode* right)
     {
-        // std::cout<<">>>> HERE << "<<left->stringRepresentation()<< "_"<<right->stringRepresentation();
-        auto result = *left >= right;
-        // std::cout<<" "<<result->stringRepresentation() << std::endl;
-        return result;
+        auto ltype = (int)left->getType();
+        auto rtype = (int)right->getType();
+        
+        auto func = TYPE_GREATEREQUAL_TABLE[ltype][rtype];
+        if(func == nullptr)
+        {
+            errorHandler(SymanticError("GreaterThanEqual of Incompatible types"));
+        }
+        return func(left, right);
     }
 };
 

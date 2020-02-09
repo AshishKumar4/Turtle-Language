@@ -40,7 +40,7 @@ enum class TokenType
 #define DERV_TYPE_SINGLEQUOTE     1 << 6
 #define DERV_TYPE_DOUBLEQUOTE     1 << 7
 // #define DERV_TYPE_SEPERATOR_OPERATOR    1<<8
-// #define DERV_TYPE_INFER           1 << 7
+#define DERV_TYPE_INFER           1 << 8
 
 #define TOKEN_RULE_DECISION_MAKE        1 << 1
 #define TOKEN_RULE_DECISION_BREAK       1 << 2

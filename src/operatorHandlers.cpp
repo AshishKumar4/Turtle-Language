@@ -20,246 +20,222 @@ TokenTree *operator_binaryTemplate(TokenTree *left, TokenTree *right)
     return nullptr;
 }
 
-// TokenTree *operator_unaryAddition(TokenTree *node)
-// {
-//     node = solveVariablePlaceHolder(node);
-//     switch (node->getType())
-//     {
-//     case TokenTreeType::CONSTANT:
-//     {
-//         // Only constants can come over here as Variables got solved in the parser stage,
-//         // and Unknowns aren't allowed to get solved here.
-//         // Get MemoryWrapper objects
-//         auto leftobj = ((ConstantTreeNode *)node)->getObject();
-//         auto result = ((*leftobj));
-//         return new ConstantTreeNode(result, result->getResultString());
-//         break;
-//     }
-//     case TokenTreeType::VARIABLE:
-//     case TokenTreeType::OPERATOR:
-//     case TokenTreeType::FUTURE_LITERAL:
-//     default:
-//         errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-//     }
-//     return nullptr;
-// }
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_ADDITION_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_MULTIPLY_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_DIVIDE_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_MODULO_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_LESS_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_GREATER_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_EQUALS_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
+// std::function<MemHolderTreeNode*(MemHolderTreeNode*, MemHolderTreeNode*)> TYPE_MODULO_TABLE[(int)turtleObjectType::num][(int)turtleObjectType::num];
 
-TokenTree *operator_unarySubtraction(TokenTree *node)
+/***********************************************************************************************************/
+/***************************************** Definitions for addition ****************************************/
+/***********************************************************************************************************/
+
+MemHolderTreeNode* addStringToString(MemHolderTreeNode* left, MemHolderTreeNode* right)
 {
-    switch (node->getType())
-    {
-        case TokenTreeType::CONSTANT:
-        {
-            
-        }
-    }
-    return nullptr;
+    return new ConstantTreeNode<turtleString>( (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(left)) + (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(right)) );
 }
 
-bool isVariableUnknown(VariableTreeNode *left, VariableTreeNode *right)
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* addValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
 {
-    if (left->getStoreType() == TokenTreeType::UNKNOWN)
-    {
-        errorHandler(SyntacticError("object " + left->getName() + " Not Defined!"));
-        return true;
-    }
-    if (right->getStoreType() == TokenTreeType::UNKNOWN)
-    {
-        errorHandler(SyntacticError("object " + left->getName() + " Not Defined!"));
-        return true;
-    }
-    return false;
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) + (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
 }
 
-TokenTree *operator_binaryAddition(TokenTree *left, TokenTree *right)
+/***********************************************************************************************************/
+/**************************************** Definitions for Subtraction **************************************/
+/***********************************************************************************************************/
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* subValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
 {
-    // left = solveVariablePlaceHolder(left);
-    // right = solveVariablePlaceHolder(right);
-    if (left->getType() == right->getType())
-    {
-        switch (left->getType())
-        {
-        case TokenTreeType::CONSTANT:
-        {
-            // Only constants can come over here as Variables got solved in the parser stage,
-            // and Unknowns aren't allowed to get solved here.
-            // Get MemoryWrapper objects
-            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            // auto result = (*(MemHolderTreeNode*)(left) + ((MemHolderTreeNode*)right));
-            // auto tok = ConstantTreeNode(result, result->getResultString());
-            // return result;//new ConstantTreeNode(result, result->getResultString());
-            break;
-        }
-        case TokenTreeType::VARIABLE:
-        case TokenTreeType::OPERATOR:
-        case TokenTreeType::FUTURE_LITERAL:
-            return nullptr;
-        default:
-            errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-        }
-    }
-    else
-    {
-        // errorHandler(SyntacticError("Operator Type Incompatibility!"));
-        return nullptr;
-    }
-    return nullptr;
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) - (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
 }
 
-TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
+/***********************************************************************************************************/
+/***************************************** Definitions for Multiplication **********************************/
+/***********************************************************************************************************/
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* mulValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
 {
-    if (left->getType() == right->getType())
-    {
-        switch (left->getType())
-        {
-        case TokenTreeType::CONSTANT:
-        {
-            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            // auto result = (*leftobj) - ((*rightobj));
-            // return new ConstantTreeNode(result, result->getResultString());
-            break;
-        }
-        case TokenTreeType::VARIABLE:
-        case TokenTreeType::OPERATOR:
-        case TokenTreeType::FUTURE_LITERAL:
-            return nullptr;
-        default:
-            errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-        }
-    }
-    else
-    {
-        return nullptr;
-    }
-    return nullptr;
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) * (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
 }
 
-TokenTree *operator_binaryMultiplication(TokenTree *left, TokenTree *right)
+template<typename Char, typename Traits, typename Allocator>
+std::basic_string<Char, Traits, Allocator> operator *
+(const std::basic_string<Char, Traits, Allocator> s, size_t n)
 {
-    // left = solveVariablePlaceHolder(left);
-    // right = solveVariablePlaceHolder(right);
-    if (left->getType() == right->getType())
-    {
-        switch (left->getType())
-        {
-        case TokenTreeType::CONSTANT:
-        {
-            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            // auto result = ((*leftobj) * (*rightobj));
-            // return new ConstantTreeNode(result, result->getResultString());
-            break;
-        }
-        case TokenTreeType::VARIABLE:
-        case TokenTreeType::OPERATOR:
-        case TokenTreeType::FUTURE_LITERAL:
-            return nullptr;
-        default:
-            errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-        }
-    }
-    else
-    {
-        return nullptr;
-    }
-    return nullptr;
+   std::basic_string<Char, Traits, Allocator> tmp = s;
+   for (size_t i = 0; i < n; ++i)
+   {
+      tmp += s;
+   }
+   return tmp;
 }
 
-TokenTree *operator_binaryDivision(TokenTree *left, TokenTree *right)
+template<typename Char, typename Traits, typename Allocator>
+std::basic_string<Char, Traits, Allocator> operator *
+(size_t n, const std::basic_string<Char, Traits, Allocator>& s)
 {
-    // left = solveVariablePlaceHolder(left);
-    // right = solveVariablePlaceHolder(right);
-    if (left->getType() == right->getType())
-    {
-        switch (left->getType())
-        {
-        case TokenTreeType::CONSTANT:
-        {
-            // auto leftobj = ((ConstantTreeNode *)left)->getObject();
-            // auto rightobj = ((ConstantTreeNode *)right)->getObject();
-            // auto result = (*leftobj) / ((*rightobj));
-            // return new ConstantTreeNode(result, result->getResultString());
-            break;
-        }
-        case TokenTreeType::VARIABLE:
-        case TokenTreeType::OPERATOR:
-        case TokenTreeType::FUTURE_LITERAL:
-            return nullptr;
-        default:
-            errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-        }
-    }
-    else
-    {
-        return nullptr;
-    }
-    return nullptr;
+   return s * n;
 }
 
-TokenTree *operator_binaryEqual(TokenTree *left, TokenTree *right)
+MemHolderTreeNode* mulStringToInt(MemHolderTreeNode* left, MemHolderTreeNode* right)
 {
-    switch (left->getType())
-    {
-    case TokenTreeType::VARIABLE:
-    {
-        // right = solveVariablePlaceHolder(right);
-        if (right == nullptr)
-        {
-            return nullptr;
-        }
-        *((VariableTreeNode *)left) = right;
-        return left;
-    }
-    case TokenTreeType::TUPLE:
-    {
-        // right = solveVariablePlaceHolder(right);
-        if (right == nullptr)
-        {
-            return nullptr;
-        }
-        if (right->getType() == TokenTreeType::TUPLE)
-        {
-            auto tup = (TupleTreeNode *)left;
-            *tup = (TupleTreeNode *)right;
-        }
-        else
-        {
-            errorHandler(SyntacticError("Tuple equated to Non tuple obj"));
-        }
-        return left;
-    }
-    default:
-    {
-        errorHandler(NotImplementedError("Equivalence for non variable types"));
-    }
-    }
-    return nullptr;
+    return new ConstantTreeNode<turtleString>( (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(left)) * (turtleInt)(turtleInt)(*static_cast<ConstantTreeNode<turtleInt>*>(right)) );
 }
 
-// TokenTree *operator_binarySubtraction(TokenTree *left, TokenTree *right)
-// {
-//     if (left->getType() == right->getType())
-//     {
-//         switch (left->getType())
-//         {
-//         case TokenTreeType::PLACEHOLDER:
-//         {
-//             MemoryWrapper *leftobj = ((ConstantTreeNode *)left)->getObject();
-//             MemoryWrapper *rightobj = ((ConstantTreeNode *)right)->getObject();
+MemHolderTreeNode* mulIntToString(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<turtleString>((turtleInt)(turtleInt)(*static_cast<ConstantTreeNode<turtleInt>*>(left)) * (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(right)) );
+}
 
-//             auto result = ((*leftobj) - (*rightobj));
-//             return new ConstantTreeNode(result, result->getResultString());
-//         }
-//         default:
-//             errorHandler(NotImplementedError("Operation for tokens {" + left->getName() + " " + right->getName() + "}!"));
-//         }
-//     }
-//     else
-//     {
-//         return nullptr;
-//     }
-//     return nullptr;
-// }
+/***********************************************************************************************************/
+/***************************************** Definitions for Division ****************************************/
+/***********************************************************************************************************/
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* divValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) / (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+/***********************************************************************************************************/
+/***************************************** Definitions for Modulos *****************************************/
+/***********************************************************************************************************/
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* modValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) % (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+/***********************************************************************************************************/
+/************************************* Definitions for Boolean Operators ***********************************/
+/***********************************************************************************************************/
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* lessThanValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) < (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* greaterThanValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) > (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* lessThanEqualValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) <= (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* greaterThanEqualValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) >= (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+template <class targetType, class leftType, class rightType>
+MemHolderTreeNode* equalsValToVal(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<targetType>( (targetType)(leftType)(*static_cast<ConstantTreeNode<leftType>*>(left)) == (targetType)(rightType)(*static_cast<ConstantTreeNode<rightType>*>(right)) );
+}
+
+MemHolderTreeNode* equalsStringToString(MemHolderTreeNode* left, MemHolderTreeNode* right)
+{
+    return new ConstantTreeNode<turtleInt>( (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(left)) == (std::string)(turtleString)(*static_cast<ConstantTreeNode<turtleString>*>(right)) );
+}
+
+/***********************************************************************************************************/
+/***************************************** Initialization Procedures ***************************************/
+/***********************************************************************************************************/
+
+void init_typeOperations()
+{
+    //Addition -->
+    TYPE_ADDITION_TABLE[(int)turtleObjectType::STRING][(int)turtleObjectType::STRING] = &addStringToString;
+
+    TYPE_ADDITION_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &addValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_ADDITION_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &addValToVal<turtleFloat, turtleInt, turtleFloat>;
+
+    TYPE_ADDITION_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &addValToVal<turtleFloat, turtleFloat, turtleInt>;
+    TYPE_ADDITION_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &addValToVal<turtleFloat, turtleFloat, turtleFloat>;
+
+    // Subtraction -->
+    TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &subValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &subValToVal<turtleFloat, turtleInt, turtleFloat>;
+
+    TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &subValToVal<turtleFloat, turtleFloat, turtleInt>;
+    TYPE_SUBTRACTION_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &subValToVal<turtleFloat, turtleFloat, turtleFloat>;
+
+    // Multiply -->
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::STRING][(int)turtleObjectType::INT] = &mulStringToInt;
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::STRING] = &mulIntToString;
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &mulValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &mulValToVal<turtleFloat, turtleInt, turtleFloat>;
+
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &mulValToVal<turtleFloat, turtleFloat, turtleInt>;
+    TYPE_MULTIPLY_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &mulValToVal<turtleFloat, turtleFloat, turtleFloat>;
+
+    // Divide -->
+    TYPE_DIVIDE_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &divValToVal<turtleFloat, turtleInt, turtleInt>;
+    TYPE_DIVIDE_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &divValToVal<turtleFloat, turtleInt, turtleFloat>;
+
+    TYPE_DIVIDE_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &divValToVal<turtleFloat, turtleFloat, turtleInt>;
+    TYPE_DIVIDE_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &divValToVal<turtleFloat, turtleFloat, turtleFloat>;
+    
+    // Mod -->
+    TYPE_MODULO_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &modValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_MODULO_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &modValToVal<turtleFloat, turtleInt, turtleFloat>;
+
+    TYPE_MODULO_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &modValToVal<turtleFloat, turtleFloat, turtleInt>;
+    TYPE_MODULO_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &modValToVal<turtleFloat, turtleFloat, turtleFloat>;
+    
+    // Boolean Less Than-->
+    TYPE_LESS_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &lessThanValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_LESS_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &lessThanValToVal<turtleInt, turtleInt, turtleFloat>;
+
+    TYPE_LESS_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &lessThanValToVal<turtleInt, turtleFloat, turtleInt>;
+    TYPE_LESS_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &lessThanValToVal<turtleInt, turtleFloat, turtleFloat>;
+    
+    // Boolean Greater Than-->
+    TYPE_GREATER_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &greaterThanValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_GREATER_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &greaterThanValToVal<turtleInt, turtleInt, turtleFloat>;
+
+    TYPE_GREATER_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &greaterThanValToVal<turtleInt, turtleFloat, turtleInt>;
+    TYPE_GREATER_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &greaterThanValToVal<turtleInt, turtleFloat, turtleFloat>;
+    
+    // Boolean Equals-->
+    TYPE_EQUALS_TABLE[(int)turtleObjectType::STRING][(int)turtleObjectType::STRING] = &equalsStringToString;
+
+    TYPE_EQUALS_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &equalsValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_EQUALS_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &equalsValToVal<turtleInt, turtleInt, turtleFloat>;
+
+    TYPE_EQUALS_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &equalsValToVal<turtleInt, turtleFloat, turtleInt>;
+    TYPE_EQUALS_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &equalsValToVal<turtleInt, turtleFloat, turtleFloat>;
+
+    // Boolean Less than Equals-->
+    TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &lessThanEqualValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &lessThanEqualValToVal<turtleInt, turtleInt, turtleFloat>;
+
+    TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &lessThanEqualValToVal<turtleInt, turtleFloat, turtleInt>;
+    TYPE_LESSEQUAL_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &lessThanEqualValToVal<turtleInt, turtleFloat, turtleFloat>;
+
+    // Boolean Equals-->
+    TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::INT] = &greaterThanEqualValToVal<turtleInt, turtleInt, turtleInt>;
+    TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::INT][(int)turtleObjectType::FLOAT] = &greaterThanEqualValToVal<turtleInt, turtleInt, turtleFloat>;
+
+    TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::INT] = &greaterThanEqualValToVal<turtleInt, turtleFloat, turtleInt>;
+    TYPE_GREATEREQUAL_TABLE[(int)turtleObjectType::FLOAT][(int)turtleObjectType::FLOAT] = &greaterThanEqualValToVal<turtleInt, turtleFloat, turtleFloat>;
+}
+
 } // namespace turtle

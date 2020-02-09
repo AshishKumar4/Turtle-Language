@@ -8,6 +8,7 @@
 #include "tokenTree/bracket.hpp"
 #include "tokenTree/operator.hpp"
 #include "tokenTree/literal.hpp"
+#include "operatorHandlers.hpp"
 
 #include "ast/ast.hpp"
 
@@ -18,21 +19,10 @@ namespace turtle
 {
 std::map<TokenType, tokenDigester_t> TOKEN_DIGESTERS;
 
-// extern TokenDigesterReturn_t tokenTreeDigester_functional(Token **list, int index, int size, variableContext_t context);
-// extern TokenDigesterReturn_t tokenTreeDigester_conditional(Token **list, int index, int size, variableContext_t context);
-// extern TokenDigesterReturn_t tokenTreeDigester_loop(Token **list, int index, int size, variableContext_t context);
-
 extern TokenDigesterReturn_t tokenDigester_literal(Token **list, int index, int size);  //, variableContext_t context);
 extern TokenDigesterReturn_t tokenDigester_number(Token **list, int index, int size);   //, variableContext_t context);
 extern TokenDigesterReturn_t tokenDigester_operator(Token **list, int index, int size); //, variableContext_t context);
 extern TokenDigesterReturn_t tokenDigester_bracket(Token **list, int index, int size);  //, variableContext_t context);
-// extern TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size, variableContext_t context);
-
-// TupleTreeNode::TupleTreeNode(std::vector<TokenTree *> nodes, bool sanitize) : TreeTuple<TokenTree>(nodes, TokenTreeUseType::DYNAMIC), is_dynamic(true)
-// {
-//     // We should sanitize the tuple i.e, convert all internal expressions into solved TokenTreeTypes* if they are mere Arithmatic expressions
-
-// }
 
 void CodeBlock::solve(variableContext_t context)
 {
@@ -59,6 +49,12 @@ void TupleTreeNode::solve(variableContext_t context)
     is_solved = true;
 }
 
+void ListTreeNode::solve(variableContext_t context)
+{
+    this->nodes = sanitizeSequences(this->nodes, context, ",", true, true);
+    // is_solved = true;
+}
+
 void FunctionTreeNode::setParams(TupleTreeNode *paramVals, variableContext_t context)
 {
     // std::cout << "\nSET PARAMETERS\n";
@@ -83,7 +79,7 @@ TokenDigesterReturn_t tokenDigester_quotes(Token **list, int index, int size) //
     auto tok = list[index];
     std::cout << "str[" << tok->data << "]";
     // StrConst *str = new StrConst(std::string(tok->data.begin()+1, tok->data.end()-1));
-    auto turtlestr = turtleString(tok->data);
+    auto turtlestr = turtleString(std::string(tok->data.begin()+1, tok->data.end()-1));
     ConstantTreeNode<turtleString> *node = new ConstantTreeNode<turtleString>(turtlestr, tok->data);
     return TokenDigesterReturn_t(node, 1);
 }
@@ -141,6 +137,7 @@ void init_tokenDigesters()
     TOKEN_DIGESTERS[TokenType::DOUBLE_QUOTES] = tokenDigester_quotes;
 
     init_operatorTypeTable();
+    init_typeOperations();
 }
 
 void init_tokenTrees()

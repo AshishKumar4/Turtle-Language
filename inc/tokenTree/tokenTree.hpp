@@ -6,6 +6,7 @@
 #include "exception"
 #include "functional"
 #include <map>
+#include <any>
 
 #include "tokens.hpp"
 
@@ -480,14 +481,81 @@ class ListTreeNode : public TokenTree
 public:
     ListTreeNode(std::vector<TokenTree *> nodes) : TokenTree(TokenTreeType::LIST, TokenTreeUseType::DYNAMIC, "list" + std::to_string(nodes.size())), nodes(nodes)
     {
-        errorHandler("Lists Not Implemented!");
+        // errorHandler("Lists Not Implemented!");
+    }
+
+    void set(std::vector<TokenTree *> target)
+    {
+        set(&target[0]);
+    }
+
+    void set(TokenTree **target)
+    {
+        // Length of target array SHOULD ALWAYS be equal to length of elements array
+        try
+        {
+            for (int i = 0; i < nodes.size(); i++)
+            {
+                nodes[i] = target[i];
+            }
+        }
+        catch (...)
+        {
+            std::cerr << "Error in setting function elements to target!";
+            exit(0);
+        }
+    }
+
+    std::vector<TokenTree *> get()
+    {
+        return nodes;
+    }
+
+    TokenTree *get(int index)
+    {
+        return nodes[index];
+    }
+
+    virtual std::string stringRepresentation()
+    {
+        std::string val = "[";
+        for (auto i : nodes)
+        {
+            val += i->stringRepresentation() + ",";
+        }
+        return val + "]";
     }
 
     virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
+        if (nodes.size() == 1)
+        {
+            return nodes[0]->execute(context);
+        }
+        else
+        {
+            // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
+            for (int i = 0; i < nodes.size(); i++)
+            {
+                nodes[i] = nodes[i]->execute(context); //->execute(context);
+            }
+            // return tuple;
+        }
         return this;
     }
+
+    auto size()
+    {
+        return nodes.size();
+    }
+
+    void push_back(TokenTree* node)
+    {
+        nodes.push_back(node);
+    }
+    
+    void solve(variableContext_t context);
 };
 
 class MemHolderTreeNode : public TokenTree 
@@ -501,18 +569,27 @@ public:
 
     virtual bool booleanValue() = 0;
 
-    virtual MemHolderTreeNode* operator + (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator * (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator % (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator < (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator > (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator == (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator >= (MemHolderTreeNode* obj) = 0;
-    virtual MemHolderTreeNode* operator <= (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator + (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator * (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator % (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator < (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator > (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator == (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator >= (MemHolderTreeNode* obj) = 0;
+    // virtual MemHolderTreeNode* operator <= (MemHolderTreeNode* obj) = 0;
+
+    virtual turtleObject* getRawObject() = 0;
+    virtual std::any getObject() = 0;
+
+    virtual turtleObjectType getType()= 0;
 };
 
+// template <class T>
+
+
+// std::any TYPE_RECAST_TABLE[3] = { &std::any_cast<turtleString>, &std::any_cast<turtleInt>, &std::any_cast<turtleFloat>};
 
 template <typename memObj>
 class ConstantTreeNode : public MemHolderTreeNode
@@ -522,13 +599,15 @@ class ConstantTreeNode : public MemHolderTreeNode
 
 public:
 
-    ConstantTreeNode(memObj &obj, std::string name = "tmp") : MemHolderTreeNode(TokenTreeType::CONSTANT, TokenTreeUseType::STATIC, "const_" + name), obj(obj)
+    ConstantTreeNode(memObj obj, std::string name = "tmp") : MemHolderTreeNode(TokenTreeType::CONSTANT, TokenTreeUseType::STATIC, "const_" + name), obj(obj)
     {
     }
 
     void *operator new(std::size_t size)
     {
         ConstantTreeNode<memObj> *tok = grabsToken.grab();
+        // std::cout<<"\nConstant ADDRESS: ";
+        // printf("%x", (int)tok);
         return tok;
     }
 
@@ -537,10 +616,30 @@ public:
         grabsToken.giveBack((ConstantTreeNode<memObj> *)ptr);
     }
 
-    auto getObject()
+    turtleObjectType getType()
+    {
+        return obj.type;
+    }
+
+    turtleObject* getRawObject()
+    {
+        return &obj;
+    }
+
+    std::any getObject()
     {
         return obj;
     }
+
+    operator memObj()
+    {
+        return obj;
+    }
+
+    // std::type_info getType()
+    // {
+    //     return typeid(memObj);
+    // }
 
     bool booleanValue()
     {
@@ -562,66 +661,6 @@ public:
     {
         // Execution logic
         return this;
-    }
-
-    MemHolderTreeNode* operator +(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj + ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator -(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj - ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator /(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj / ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator *(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj * ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator <(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj < ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator >(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj > ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator ==(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj == ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator >=(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj >= ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator <=(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj <= ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
-    }
-
-    MemHolderTreeNode* operator %(MemHolderTreeNode* right)
-    {
-        memObj result = this->obj % ((ConstantTreeNode<memObj>*)right)->obj;
-        return new ConstantTreeNode<memObj>(result, std::string(result));
     }
 };
 

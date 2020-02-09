@@ -74,9 +74,9 @@ void shellLoop()
             SHELL_HISTORY.push_back(userInput);
             val = interpreter(userInput);
         }
-        catch (...)
+        catch (std::exception &e)
         {
-            std::cout << "Error Occured!"; //<< e.what();
+            std::cout << "Error Occured! " << e.what();
         }
         setColor(BRIGHT_GREEN);
         std ::cout << std::endl
