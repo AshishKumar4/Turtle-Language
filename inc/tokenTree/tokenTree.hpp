@@ -483,17 +483,6 @@ public:
 
     }
 
-    // virtual MemHolderTreeNode* operator + (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator * (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator % (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator < (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator > (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator == (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator >= (MemHolderTreeNode* obj) = 0;
-    // virtual MemHolderTreeNode* operator <= (MemHolderTreeNode* obj) = 0;
-
     virtual bool booleanValue() = 0;
 
     virtual turtleObject* getRawObject() = 0;
@@ -501,11 +490,6 @@ public:
 
     virtual turtleObjectType getType()= 0;
 };
-
-// template <class T>
-
-
-// std::any TYPE_RECAST_TABLE[3] = { &std::any_cast<turtleString>, &std::any_cast<turtleInt>, &std::any_cast<turtleFloat>};
 
 template <typename memObj>
 class ConstantTreeNode : public MemHolderTreeNode

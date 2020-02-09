@@ -15,7 +15,7 @@ wow = lambda (x) { x("THIS WORKS!") };
 
 sum = 0;
 
-i = 100000;
+i = 1000;
 
 while (i)
 {
@@ -44,4 +44,6 @@ z = new(2,3);
 u = test(new(4,5), new(2,3));
 v = test(y, z);
 
-(x,y,z, sum, o, wow(lambda (x){ "WOW " + x } ), u, v);
+a = [5,2,7,[8,10],1,4];
+
+(x,y,z, sum, o, wow(lambda (x){ "WOW " + x } ), u, v, a + 5, a[2,3]);

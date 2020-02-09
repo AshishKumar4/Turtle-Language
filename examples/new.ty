@@ -1,0 +1,54 @@
+define someCrazyFunction(a,b) 
+{
+    o = a * a + b;
+};
+
+someCrazyFunction(4,5);
+
+define wow(a) 
+{
+    return a + 4;
+};
+
+a = wow;
+a(4);
+define wow(a)
+{
+    a('This Works!');
+};
+
+wow( lambda (x) {"WOW!, " + x} );
+
+a = 0;
+b = 0;
+if(b)
+{
+    a = 1;
+}
+elif (b, 1)
+{
+    a = 2;
+}
+elif (b + 1, 0)
+{
+    a = 3;
+}
+elif (b + 1, 1)
+{
+    a = 4;
+}
+else 
+{
+    a = 5;
+};
+
+a;
+
+a = 0;
+sum = 0;
+while (a < 10)
+{
+    sum = sum + a;
+    a = a + 1;
+};  
+sum; 
