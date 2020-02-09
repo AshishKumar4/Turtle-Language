@@ -16,7 +16,8 @@ enum class turtleObjectType
     STRING,
     INT,
     FLOAT,
-    num
+    LIST,
+    num,
 };
 
 struct turtleObject

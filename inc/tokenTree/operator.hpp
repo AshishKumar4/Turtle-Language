@@ -205,7 +205,7 @@ public:
                         ListTreeNode* newList = new ListTreeNode({});
                         for(int i = 0; i < r->size(); i++)
                         {
-                            newList->push_back(logic_internal((MemHolderTreeNode*)left, (MemHolderTreeNode*)r->get(i)));
+                            newList->push_back(logic((TokenTree*)left, (TokenTree*)r->get(i)));
                         }
                         return newList;
                     }
@@ -221,7 +221,7 @@ public:
                         ListTreeNode* newList = new ListTreeNode({});
                         for(int i = 0; i < l->size(); i++)
                         {
-                            newList->push_back(logic_internal((MemHolderTreeNode*)l->get(i), (MemHolderTreeNode*)right));
+                            newList->push_back(logic((TokenTree*)l->get(i), (TokenTree*)right));
                         }
                         return newList;
                     }
@@ -237,7 +237,7 @@ public:
                         ListTreeNode* newList = new ListTreeNode({});
                         for(int i = 0; i < r->size(); i++)
                         {
-                            newList->push_back(logic_internal((MemHolderTreeNode*)l->get(i), (MemHolderTreeNode*)r->get(i)));
+                            newList->push_back(logic((TokenTree*)l->get(i), (TokenTree*)r->get(i)));
                         }
                         return newList;
                     }

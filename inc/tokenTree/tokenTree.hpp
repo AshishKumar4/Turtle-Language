@@ -483,8 +483,6 @@ public:
 
     }
 
-    virtual bool booleanValue() = 0;
-
     // virtual MemHolderTreeNode* operator + (MemHolderTreeNode* obj) = 0;
     // virtual MemHolderTreeNode* operator - (MemHolderTreeNode* obj) = 0;
     // virtual MemHolderTreeNode* operator / (MemHolderTreeNode* obj) = 0;
@@ -495,6 +493,8 @@ public:
     // virtual MemHolderTreeNode* operator == (MemHolderTreeNode* obj) = 0;
     // virtual MemHolderTreeNode* operator >= (MemHolderTreeNode* obj) = 0;
     // virtual MemHolderTreeNode* operator <= (MemHolderTreeNode* obj) = 0;
+
+    virtual bool booleanValue() = 0;
 
     virtual turtleObject* getRawObject() = 0;
     virtual std::any getObject() = 0;
