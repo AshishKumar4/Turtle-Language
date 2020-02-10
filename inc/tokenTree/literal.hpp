@@ -30,10 +30,8 @@ protected:
     TokenTreeType type;
 
 public:
-    LiteralConstraint(TokenTreeType type) :
-    type(type)
+    LiteralConstraint(TokenTreeType type) : type(type)
     {
-
     }
 
     auto getType()
@@ -45,11 +43,10 @@ public:
 class TupleLiteralConstraint : public LiteralConstraint
 {
     int size;
-public:
-    TupleLiteralConstraint(int size) :
-    LiteralConstraint(TokenTreeType::TUPLE), size(size)
-    {
 
+public:
+    TupleLiteralConstraint(int size) : LiteralConstraint(TokenTreeType::TUPLE), size(size)
+    {
     }
 
     auto getSize()
@@ -61,11 +58,10 @@ public:
 class NameLiteralConstraint : public LiteralConstraint
 {
     std::string name;
-public:
-    NameLiteralConstraint(std::string name, TokenTreeType type=TokenTreeType::TEMP_LITERAL) :
-    LiteralConstraint(type), name(name)
-    {
 
+public:
+    NameLiteralConstraint(std::string name, TokenTreeType type = TokenTreeType::TEMP_LITERAL) : LiteralConstraint(type), name(name)
+    {
     }
 
     auto getName()
@@ -74,20 +70,17 @@ public:
     }
 };
 
-
-#define REPEAT_ZERO_OR_MANY     0
-#define REPEAT_ONE_OR_MANY     -1
-#define REPEAT_ZERO_OR_ONE     -2
+#define REPEAT_ZERO_OR_MANY 0
+#define REPEAT_ONE_OR_MANY -1
+#define REPEAT_ZERO_OR_ONE -2
 
 class LiteralRule
 {
-    int repeats;    // -1 = 1 or more, 0 = 0 or more, 1 = 1 
+    int repeats; // -1 = 1 or more, 0 = 0 or more, 1 = 1
 public:
-    std::vector<LiteralConstraint*> constraints;
-    LiteralRule(std::vector<LiteralConstraint*> constraints, int repeats) :
-    constraints(constraints), repeats(repeats)
+    std::vector<LiteralConstraint *> constraints;
+    LiteralRule(std::vector<LiteralConstraint *> constraints, int repeats) : constraints(constraints), repeats(repeats)
     {
-        
     }
 
     int getRepeats()
@@ -107,45 +100,46 @@ class LiteralRulesConstruct
 protected:
     TokenTreeType type;
     std::string name;
+
 public:
     std::vector<LiteralRule> rules;
     // std::function<TokenDigesterReturn_t(Token**, int, int, std::vector<LiteralRules>)>     tokenTreeBuilder;
 
-    LiteralRulesConstruct(std::string name, TokenTreeType type, std::vector<LiteralRule> rules) ://, std::function<TokenDigesterReturn_t(Token**, int, int, std::vector<LiteralRules>)> tokenTreeBuilder) : 
-    name(name), type(type), rules(rules)//, tokenTreeBuilder(tokenTreeBuilder)
+    LiteralRulesConstruct(std::string name, TokenTreeType type, std::vector<LiteralRule> rules) :                                      //, std::function<TokenDigesterReturn_t(Token**, int, int, std::vector<LiteralRules>)> tokenTreeBuilder) :
+                                                                                                  name(name), type(type), rules(rules) //, tokenTreeBuilder(tokenTreeBuilder)
     {
-
     }
 
-    TokenTreeType getType() {return type;}
+    TokenTreeType getType() { return type; }
 
-    TokenDigesterReturn_t tokenTreeBuilder(TokenTree** list, int index, int size, variableContext_t context, bool tree_expantion=true);
+    TokenDigesterReturn_t tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t context, bool tree_expantion = true);
 };
 
-class TempLiteralTreeNode : public TokenTree 
+class TempLiteralTreeNode : public TokenTree
 {
     static Grabs<TempLiteralTreeNode> grabsToken;
+
 protected:
-    LiteralRulesConstruct*   rule;
+    LiteralRulesConstruct *rule;
+
 public:
-    TempLiteralTreeNode(std::string name, LiteralRulesConstruct* rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL) : 
-    TokenTree(type, TokenTreeUseType::DYNAMIC, "key_"+name), rule(rule)
+    TempLiteralTreeNode(std::string name, LiteralRulesConstruct *rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL) : TokenTree(type, TokenTreeUseType::DYNAMIC, "key_" + name), rule(rule)
     {
         // std::cout<<"keyword["<<name<<"]";
     }
 
-    void* operator new(std::size_t size)
+    void *operator new(std::size_t size)
     {
-        TempLiteralTreeNode* tok = grabsToken.grab();
+        TempLiteralTreeNode *tok = grabsToken.grab();
         return tok;
     }
 
-    void operator delete(void* ptr)
+    void operator delete(void *ptr)
     {
-        std::cout<<"Custom delete!";
-        grabsToken.giveBack((TempLiteralTreeNode*)ptr);
+        std::cout << "Custom delete!";
+        grabsToken.giveBack((TempLiteralTreeNode *)ptr);
     }
-    
+
     auto getRule()
     {
         return rule;
@@ -156,34 +150,34 @@ public:
         // Execution logic
         return this;
     }
-
 };
 
-class TempLiteralWrapperNode : public TokenTree 
+class TempLiteralWrapperNode : public TokenTree
 {
     static Grabs<TempLiteralWrapperNode> grabsToken;
+
 protected:
-    LiteralRulesConstruct*   rule;
-    VariableTreeNode*  orig;
+    LiteralRulesConstruct *rule;
+    TokenTree *orig;
+
 public:
-    TempLiteralWrapperNode(VariableTreeNode* orig, LiteralRulesConstruct* rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL_WRAPPER) : 
-    TokenTree(type, TokenTreeUseType::DYNAMIC, "tmp_"+orig->getName()), rule(rule), orig(orig)
+    TempLiteralWrapperNode(TokenTree *orig, LiteralRulesConstruct *rule, TokenTreeType type = TokenTreeType::TEMP_LITERAL_WRAPPER) : TokenTree(type, TokenTreeUseType::DYNAMIC, "tmp_" + orig->getName()), rule(rule), orig(orig)
     {
         // std::cout<<"keyword["<<name<<"]";
     }
 
-    void* operator new(std::size_t size)
+    void *operator new(std::size_t size)
     {
-        TempLiteralWrapperNode* tok = grabsToken.grab();
+        TempLiteralWrapperNode *tok = grabsToken.grab();
         return tok;
     }
 
-    void operator delete(void* ptr)
+    void operator delete(void *ptr)
     {
-        std::cout<<"Custom delete!";
-        grabsToken.giveBack((TempLiteralWrapperNode*)ptr);
+        std::cout << "Custom delete!";
+        grabsToken.giveBack((TempLiteralWrapperNode *)ptr);
     }
-    
+
     auto getRule()
     {
         return rule;
@@ -199,7 +193,6 @@ public:
         // Execution logic
         return this;
     }
-
 };
 
 typedef std::tuple<TokenTreeType, std::vector<TokenTree *>, std::vector<LiteralRule>> futureData_t;
@@ -209,9 +202,9 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
 class FutureSolutionTreeNode : public TokenTree
 {
     futureData_t data;
+
 public:
-    FutureSolutionTreeNode(TokenTreeType type, std::vector<TokenTree *> list, std::vector<LiteralRule> rules) : 
-    TokenTree(TokenTreeType::FUTURE_LITERAL, TokenTreeUseType::DYNAMIC, "tmp")
+    FutureSolutionTreeNode(TokenTreeType type, std::vector<TokenTree *> list, std::vector<LiteralRule> rules) : TokenTree(TokenTreeType::FUTURE_LITERAL, TokenTreeUseType::DYNAMIC, "tmp")
     {
         data = futureData_t(type, list, rules);
     }
@@ -221,9 +214,20 @@ public:
         return data;
     }
 
-    TokenTree* execute(variableContext_t context)
+    int checkSatisfiability(LiteralConstraint **constraints, int size);
+
+    TokenTree *execute(variableContext_t context)
     {
         auto [type, list, rules] = data;
+        for (int i = 0; i < list.size(); i++)
+        {
+            // if (list[i]->getType() == TokenTreeType::VARIABLE)
+            //     list[i] = contextSolver((VariableTreeNode *)list[i], context, false); //list[i]->execute(context);
+            if (list[i]->getType() == TokenTreeType::FUTURE_LITERAL)
+            {
+                list[i] = list[i]->execute(context);
+            }
+        }
         return genTokenTreeNodeFromList(type, list, rules, context)->execute(context);
     }
 };

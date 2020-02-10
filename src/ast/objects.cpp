@@ -32,6 +32,7 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     {
         std::cout << "\nDEFINE:";
         // We construct a new function!
+        std::cout << (int)list[0]->getType() << " " << (int)list[1]->getType() << " " << (int)list[2]->getType();
         node = new FunctionTreeNode(list[1]->getName(), (TupleTreeNode *)list[2], ((CodeBlock *)list[3]), context);
         // Wrap our new node into a PlaceHolder Variable and put it into the context
         auto var = new VariableTreeNode(node, list[1]->getName());
@@ -60,12 +61,16 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
             funccopy->setParams((TupleTreeNode *)list[1], context);
             // node = func->execute(context);
             node = funccopy; // We provide an instance of the function
-            std::cout<<"["<<node->stringRepresentation()<<"]";
+            std::cout << "[" << node->stringRepresentation() << "]";
             break;
         }
         case TokenTreeType::INBUILT_FUNCTION:
         {
 
+            break;
+        }
+        case TokenTreeType::LIST:
+        {
             break;
         }
         case TokenTreeType::UNKNOWN:
@@ -125,11 +130,11 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     }
     case TokenTreeType::LOOP:
         std::cout << "\nLOOP:";
-        if(list[0]->getName() == "key_while")
+        if (list[0]->getName() == "key_while")
         {
-            node = new WhileLoopTreeNode((TupleTreeNode*)list[1], (CodeBlock*)list[2]);
+            node = new WhileLoopTreeNode((TupleTreeNode *)list[1], (CodeBlock *)list[2]);
         }
-        else 
+        else
         {
             errorHandler(NotImplementedError(list[0]->getName() + " kind of loops!"));
         }
@@ -138,18 +143,27 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
     {
         std::cout << "\nLIST INDEXING:";
         node = list[0];
-        std::cout << node->getName();
+        std::cout << node->stringRepresentation() << ", indexes: " << list[1]->stringRepresentation() << std::endl;
         if (node->getType() == TokenTreeType::VARIABLE)
         {
             node = contextSolver((VariableTreeNode *)node, context, true);
             node = node->execute(context);
         }
-        if(node->getType() != TokenTreeType::LIST)
+        if (node->getType() != TokenTreeType::LIST)
         {
             errorHandler(SymanticError("Array Indexing used on Non Array object"));
         }
-        ((ListTreeNode*)list[1])->solve(context);
-        node = new ListTreeNode(((ListTreeNode*)node)->get(((ListTreeNode*)list[1])->get()));
+        auto indexes = ((ListTreeNode *)list[1]);
+        indexes->solve(context);
+        if (indexes->size() == 1)
+        {
+            node = ((ListTreeNode *)node)->get(indexes->get())[0];
+        }
+        else
+        {
+            node = new ListTreeNode(((ListTreeNode *)node)->get(indexes->get()));
+        }
+        std::cout << "\n=====>> " << node->stringRepresentation() << std::endl;
         break;
     }
     case TokenTreeType::DUMMY:
@@ -173,8 +187,9 @@ TokenTree *genTokenTreeNodeFromList(TokenTreeType type, std::vector<TokenTree *>
 int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constraints, int finger, int size)
 {
     int counter = 0;
-    for (auto j : constraints)
+    for (int k = 0; k < constraints.size(); k++)
     {
+        auto j = constraints[k];
         if (finger >= size)
         {
             return 0;
@@ -187,6 +202,15 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
 
         switch (j->getType())
         {
+        // case TokenTreeType::FUTURE_LITERAL:
+        // {
+        //     int counts = ((FutureSolutionTreeNode *)list[finger])->checkSatisfiability(&constraints[k], constraints.size() - k);
+        //     finger += counts;
+        //     counter += counts;
+        //     k += counts - 1;
+        //     std::cout<<"\n====>>>> "<<counts;
+        //     continue;
+        // }
         case TokenTreeType::DUMMY:
             // Dummy is basically to take in Anything!
             ++finger;
@@ -203,7 +227,7 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
             // std::cerr<< "[tuple condition not met "<< ((TupleLiteralConstraint *)j)->getSize() << " , " << ((TupleTreeNode *)list[finger])->getSize();
             break;
         case TokenTreeType::LIST:
-            if (list[finger]->getType() == TokenTreeType::LIST)// && (((ListTreeNode *)j)->size() <= 0 || ((ListTreeNode *)j)->getSize() == ((ListTreeNode *)list[finger])->getSize()))
+            if (list[finger]->getType() == TokenTreeType::LIST) // && (((ListTreeNode *)j)->size() <= 0 || ((ListTreeNode *)j)->getSize() == ((ListTreeNode *)list[finger])->getSize()))
             {
                 // Constraint met!
                 ++finger;
@@ -273,10 +297,21 @@ int checkConstraints(TokenTree **list, std::vector<LiteralConstraint *> &constra
         // std::cout<<"[constraint satisfied] ";
         // fflush(stdout);
         // All Constraints met, We found a possible candidate
-        return 1;
+        return counter;
     }
     // std::cerr << list[finger]->getName() << " [condition not met]";
     return 0;
+}
+
+int FutureSolutionTreeNode::checkSatisfiability(LiteralConstraint **constraints, int size)
+{
+    auto [type, list, rules] = data;
+    for(int i = 0; i < size; i++)
+    {
+        // std::cout<<"==>["<<list[i]->stringRepresentation()<<"]"
+    }
+    auto cons = std::vector<LiteralConstraint*>(&constraints[0], &constraints[size-1]);
+    return checkConstraints(&list[0], cons, 0, size);
 }
 
 TokenDigesterReturn_t LiteralRulesConstruct::tokenTreeBuilder(TokenTree **list, int index, int size, variableContext_t context, bool tree_expantion)
@@ -402,13 +437,14 @@ void init_globalLiteralTable()
                                                               });
 
     GLOBAL_LITERAL_TABLE["for"] = new LiteralRulesConstruct("for", TokenTreeType::LOOP,
-                                                              {
-                                                                  LiteralRule({new NameLiteralConstraint("key_for"), 
-                                                                  new TupleLiteralConstraint(REPEAT_ONE_OR_MANY), 
-                                                                  new NameLiteralConstraint("key_in"), 
-                                                                  new LiteralConstraint(TokenTreeType::LIST),
-                                                                  new LiteralConstraint(TokenTreeType::CODEBLOCK)}, 1),
-                                                              });
+                                                            {
+                                                                LiteralRule({new NameLiteralConstraint("key_for"),
+                                                                             new TupleLiteralConstraint(REPEAT_ONE_OR_MANY),
+                                                                             new NameLiteralConstraint("key_in"),
+                                                                             new LiteralConstraint(TokenTreeType::LIST),
+                                                                             new LiteralConstraint(TokenTreeType::CODEBLOCK)},
+                                                                            1),
+                                                            });
 
     GLOBAL_LITERAL_TABLE["print"] = new LiteralRulesConstruct("print", TokenTreeType::INBUILT_FUNCTION,
                                                               {

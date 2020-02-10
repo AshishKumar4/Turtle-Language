@@ -53,60 +53,121 @@ VariableTreeNode *contextSolver(VariableTreeNode *tok, variableContext_t context
 
 auto parserLastStage(std::vector<TokenTree *> nodes)
 {
-    // Its purpose is just to compliment original parser stages to resolve things like
-    // Function calls (<variable><tuple>) or Array Indexing (<variable><list>)
-
-    std::vector<TokenTree *> treelist;
-
-    for (int i = 0; i < nodes.size();)
+    std::list<TokenTree * > treelist(nodes.begin() + 1, nodes.end());
+    std::vector<TokenTree * > outQueue = {nodes[0]};
+    while(treelist.size())
     {
-        switch (nodes[i]->getType())
+        auto l = outQueue.back();
+        auto r = treelist.front();
+        switch(l->getType())
         {
+        case TokenTreeType::FUTURE_LITERAL:
+        case TokenTreeType::TUPLE:
+        case TokenTreeType::LIST:
+        case TokenTreeType::DICT:
         case TokenTreeType::VARIABLE:
+        case TokenTreeType::TEMP_LITERAL:
         {
-            TokenTree *node = nodes[i];
-            if (i + 1 < nodes.size())
+            switch(r->getType())
             {
-                switch (nodes[i + 1]->getType())
-                {
                 case TokenTreeType::TUPLE:
                 {
-
-                    node = new TempLiteralWrapperNode((VariableTreeNode *)node, GLOBAL_LITERAL_TABLE["__function__"], TokenTreeType::TEMP_LITERAL_WRAPPER);
-                    // ++i;
+                    auto node = new FutureSolutionTreeNode(TokenTreeType::FUNCTIONAL, {l, r}, GLOBAL_LITERAL_TABLE["__function__"]->rules);
+                    outQueue.pop_back();
+                    outQueue.push_back(node); 
+                    // node = new TempLiteralWrapperNode(node, GLOBAL_LITERAL_TABLE["__function__"], TokenTreeType::TEMP_LITERAL_WRAPPER);
                     break;
                 }
                 case TokenTreeType::LIST:
                 {
-                    node = new TempLiteralWrapperNode((VariableTreeNode *)node, GLOBAL_LITERAL_TABLE["__array__"], TokenTreeType::TEMP_LITERAL_WRAPPER);
+                    auto node = new FutureSolutionTreeNode(TokenTreeType::LIST, {l, r}, GLOBAL_LITERAL_TABLE["__array__"]->rules);
+                    outQueue.pop_back();
+                    outQueue.push_back(node); 
+                    // node = new TempLiteralWrapperNode(node, GLOBAL_LITERAL_TABLE["__array__"], TokenTreeType::TEMP_LITERAL_WRAPPER);
                     break;
                 }
-                default:;
-                }
+                default:
+                outQueue.push_back(r);
             }
-            treelist.push_back(node);
-            ++i;
             break;
         }
         default:
-            treelist.push_back(nodes[i]);
-            ++i;
+            outQueue.push_back(r);
         }
+        treelist.pop_front();
     }
-    return treelist;
+    return outQueue;
 }
 
 auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t context, bool tree_expantion = true)
 {
-    nodes = parserLastStage(nodes);
-
+    // std::vector<TokenTree *> newNodes;
+    // while(true)
+    // {
+    //     newNodes = parserLastStage(nodes);
+    //     if(newNodes.size() == nodes.size())
+    //         break;
+    // }
+    // nodes = parserLastStage(nodes);//newNodes;
+    // std::cout<<"\n";
+    // for(auto i : nodes)
+    // {
+    //     std::cout<<"-->"<<i->stringRepresentation();
+    // }
     std::vector<TokenTree *> treelist;
     TokenTree **tlist = &nodes[0];
 
-    // std::list<TokenTree*> nodesList(nodes.begin(), nodes.end());
     for (int i = 0; i < nodes.size();)
     {
-        // std::cout << tlist[i]->stringRepresentation() << " <=> ";
+        switch (tlist[i]->getType())
+        {
+        // case TokenTreeType::TEMP_LITERAL_WRAPPER:
+        // {
+        //     auto tmp = (TempLiteralWrapperNode *)tlist[i];
+        //     tlist[i] = tmp->getOriginal();
+        //     // If its a temp_literal_wrapper, most probably it would hold only
+        //     // Unknown variables. But still, lets just confirm!
+        //     if(tlist[i]->getType() == TokenTreeType::VARIABLE)
+        //         tlist[i] = contextSolver((VariableTreeNode *)tlist[i], context);
+        //     auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
+        //     i += poped;
+        //     treelist.push_back(elem);
+        //     break;
+        // }
+        case TokenTreeType::TEMP_LITERAL:
+        {
+            auto tmp = (TempLiteralTreeNode *)tlist[i];
+            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
+            i += poped;
+            treelist.push_back(elem);
+            break;
+        }
+        // case TokenTreeType::FUTURE_LITERAL:
+        // {
+        //     // ((FutureSolutionTreeNode*)tlist[i])->setContext(context);
+        //     treelist.push_back(tlist[i]->execute(context));
+        //     ++i;
+        //     // errorHandler(NotImplementedError("Just testing"));
+        //     break;
+        // }
+        default:
+            treelist.push_back(tlist[i]);
+            ++i;
+        }
+    }
+
+    return treelist;
+}
+
+auto genAST_Stage2(std::vector<TokenTree *> nodes, variableContext_t context, bool tree_expantion = true)
+{
+    nodes = parserLastStage(nodes);
+    std::vector<TokenTree *> treelist;
+    TokenTree **tlist = &nodes[0];
+
+    for (int i = 0; i < nodes.size();)
+    {
+        std::cout << tlist[i]->stringRepresentation() << " <=> ";
         switch (tlist[i]->getType())
         {
         case TokenTreeType::VARIABLE:
@@ -142,34 +203,6 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t context, bo
             ++i;
             break;
         }
-        case TokenTreeType::TEMP_LITERAL_WRAPPER:
-        {
-            auto tmp = (TempLiteralWrapperNode *)tlist[i];
-            tlist[i] = tmp->getOriginal();
-            // If its a temp_literal_wrapper, most probably it would hold only
-            // Unknown variables. But still, lets just confirm!
-            tlist[i] = contextSolver((VariableTreeNode *)tlist[i], context);
-            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
-            i += poped;
-            treelist.push_back(elem);
-            break;
-        }
-        case TokenTreeType::TEMP_LITERAL:
-        {
-            auto tmp = (TempLiteralTreeNode *)tlist[i];
-            auto [elem, poped] = tmp->getRule()->tokenTreeBuilder(tlist, i, nodes.size(), context, tree_expantion);
-            i += poped;
-            treelist.push_back(elem);
-            break;
-        }
-        case TokenTreeType::FUTURE_LITERAL:
-        {
-            // ((FutureSolutionTreeNode*)tlist[i])->setContext(context);
-            treelist.push_back(tlist[i]->execute(context));
-            ++i;
-            // errorHandler(NotImplementedError("Just testing"));
-            break;
-        }
         default:
             treelist.push_back(tlist[i]);
             ++i;
@@ -177,17 +210,6 @@ auto genAST_Stage1(std::vector<TokenTree *> nodes, variableContext_t context, bo
     }
 
     return treelist;
-}
-
-TokenTree *genAST(std::vector<TokenTree *> nodes, variableContext_t context)
-{
-    //Stich together the tokentree nodes to generate an Abstract Syntax Tree with one single root node
-    // This is done in several passes.
-    // First Pass includes Pairing together TempLiteralNodes and determining CurlyBracket Types (Dicts/Codeblocks) and lots of other works
-    auto stage1Nodes = genAST_Stage1(nodes, context);
-
-    // return stage1Nodes;
-    return nullptr;
 }
 
 TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t context)
@@ -243,7 +265,7 @@ TokenTree *symbolicASTexecutor(std::vector<TokenTree *> nodes, variableContext_t
     return result;
 }
 
-inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::vector<TokenTree *> &outQueue)
+inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::vector<TokenTree *> &outQueue, variableContext_t context)
 {
     // Pop elements while There are elements of higher precedence in the stack
     // or equal precedence but the operator is left associative
@@ -269,7 +291,7 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
         op->setRight(elm1);
         op->setLeft(elm2);
 
-        val = op; //op->execute();
+        val = op;//->execute(context);
     }
     else
     {
@@ -297,6 +319,36 @@ inline auto transferOpToOutQueue(std::vector<OperatorTreeNode *> &opstack, std::
     outQueue.push_back(val);
 }
 
+TokenTree* genFutureAST(std::vector<TokenTree *> nodes)
+{
+    std::list<TokenTree *> outQueue(nodes.begin(), nodes.end());
+    while(outQueue.size() > 1)
+    {
+        auto l = outQueue.front();
+        outQueue.pop_front();
+        auto r = outQueue.front();
+        outQueue.pop_front();
+
+        if(r->getType() == TokenTreeType::TUPLE)
+        {
+            std::cout<<"\n{"<<l->stringRepresentation()<<" || "<<r->stringRepresentation()<<std::endl;
+            // Must be a Function call!
+            outQueue.push_front(new FutureSolutionTreeNode(TokenTreeType::FUNCTIONAL, {l, r}, GLOBAL_LITERAL_TABLE["__function__"]->rules));
+        }
+        else if(r->getType() == TokenTreeType::LIST)
+        {
+            // Must be a Function call!
+            std::cout<<"\n{"<<l->stringRepresentation()<<" || "<<r->stringRepresentation()<<std::endl;
+            outQueue.push_front(new FutureSolutionTreeNode(TokenTreeType::LIST, {l, r}, GLOBAL_LITERAL_TABLE["__array__"]->rules));
+        }
+    }
+    if(outQueue.size() != 1) 
+    {
+        errorHandler(SyntacticError("Could not solve the statement for 1 result!"));
+    }
+    return outQueue.front();
+}
+
 TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t context, bool tree_expantion)
 {
     printf("[In SimpleAstMaker]");
@@ -312,8 +364,9 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
     }
 
     auto stage1Nodes = genAST_Stage1(nodes, context, tree_expantion); // For Only Functions and Lists
+    auto stage2Nodes = genAST_Stage2(stage1Nodes, context, tree_expantion); // For Only Functions and Lists
 
-    TokenTree *rootNode = stage1Nodes[0];
+    TokenTree *rootNode = stage2Nodes[0];
     TokenTree *currNode = rootNode;
 
     std::vector<OperatorTreeNode *> opstack;
@@ -321,9 +374,9 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
 
     try
     {
-        for (auto i : stage1Nodes)
+        for (auto i : stage2Nodes)
         {
-            std::cout << " >> " << i->getName();
+            std::cout << " >> " << i->stringRepresentation();
             fflush(stdout);
             switch (i->getType())
             {
@@ -335,7 +388,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
                        (opstack.back()->getPrecedence() < node->getPrecedence() or
                         (opstack.back()->getPrecedence() == node->getPrecedence() and node->getAssociativity() == OperatorAssociativity::LEFT)))
                 {
-                    transferOpToOutQueue(opstack, outQueue);
+                    transferOpToOutQueue(opstack, outQueue, context);
                 }
                 opstack.push_back(node);
                 break;
@@ -374,7 +427,7 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
             // std::cout << "We are here!";
             // fflush(stdout);
             // std::cout << " -->> " << outQueue.size();
-            transferOpToOutQueue(opstack, outQueue);
+            transferOpToOutQueue(opstack, outQueue, context);
             // outQueue.push_back(opstack.back());
             // opstack.pop_back();
         }
@@ -384,12 +437,22 @@ TokenTree *simpleASTmaker(std::vector<TokenTree *> nodes, variableContext_t cont
         errorHandler(SyntacticError("Wrong Grammer followed!"));
     }
 
+    TokenTree* result;
+
     if (outQueue.size() != 1)
     {
-        errorHandler(SyntacticError("Could not solve the statement for 1 result!"));
+        // Recursively solve AST
+        result = genFutureAST(outQueue);
+        // result = simpleASTmaker(outQueue, context, true);
+        // errorHandler(SyntacticError("Could not solve the statement for 1 result!"));
     }
-    std::cout << "\n[AST OUTPUT: " << outQueue[0]->stringRepresentation() << "]";
-    return outQueue[0];
+    else 
+    {
+        result = outQueue[0];
+    }
+
+    std::cout << "\n[AST OUTPUT: " << result->stringRepresentation() << "]";
+    return result;
 }
 
 std::vector<TokenTree *> sanitizeSequences(std::vector<TokenTree *> &nodes, variableContext_t context, std::string seperator, bool symbolic_execution, bool tree_expantion)

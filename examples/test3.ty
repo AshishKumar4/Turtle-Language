@@ -1,0 +1,14 @@
+
+define test(a,b) 
+{ 
+    a * 4 + b;
+};
+
+define new(a,b) 
+{
+    o = test(a*a, b)*test(4, a+b); 
+    test(o,o); 
+};
+x = test(4,5);
+y = new(4,5);
+z = new(2,3);

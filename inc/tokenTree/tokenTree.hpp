@@ -638,11 +638,11 @@ public:
     virtual TokenTree *execute(variableContext_t context)
     {
         // Execution logic
-        if (nodes.size() == 1)
-        {
-            return nodes[0]->execute(context);
-        }
-        else
+        // if (nodes.size() == 1)
+        // {
+        //     return nodes[0]->execute(context);
+        // }
+        // else
         {
             // TupleTreeNode *tuple = new TupleTreeNode(this->elements);
             for (int i = 0; i < nodes.size(); i++)
