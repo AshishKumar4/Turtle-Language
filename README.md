@@ -33,7 +33,7 @@ a = 1+2*3 + (8/3)   // --> a = 9.666667
 Every block of code encapsulated in Round Brackets forms a tuple. Tuples are solved at Symbolic Execution stage. They are Immutable.
 ```
 a = (4,5,6);
-(x,y,z) = a;    // --> x = 5, y = 5, z = 6
+(x,y,z) = a;    // --> x = 4, y = 5, z = 6
 ```
 ## Lists
 MORE SUPPORT COMING SOON! Lists are container objects similar to tuples, and can hold any type of items, but unlike tuples, are mutable. Aarray Indexing is done using a List followed by another list containing ONLY INT type values corresponding to indexes of the first list. Indexes start from 0
